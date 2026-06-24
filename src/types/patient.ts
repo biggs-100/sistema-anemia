@@ -31,7 +31,7 @@ export interface CreatePatientDTO {
   apellidoMaterno: string;
   fechaNacimiento: string;
   sexo: string;
-  centroPobladoId: number;
+  centroPobladoId?: number;
   nombreApoderado: string;
   celularApoderado?: string;
 }

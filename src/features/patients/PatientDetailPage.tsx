@@ -9,6 +9,7 @@ import HbEvolutionChart from "@/features/controls/components/HbEvolutionChart";
 import ControlForm from "@/features/controls/components/ControlForm";
 import TreatmentList from "@/features/treatments/components/TreatmentList";
 import TreatmentForm from "@/features/treatments/components/TreatmentForm";
+import Spinner from "@/components/ui/Spinner";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -99,10 +100,7 @@ export default function PatientDetailPage() {
     return (
       <div className="flex min-h-[40vh] items-center justify-center p-6">
         <div className="flex items-center gap-2 text-neutral-400">
-          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <Spinner size="md" />
           <span className="text-sm">Cargando paciente...</span>
         </div>
       </div>

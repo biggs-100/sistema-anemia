@@ -6,24 +6,35 @@ import { z } from "zod";
 import { usePatientForm } from "@/hooks/usePatients";
 import { usePatientStore } from "@/stores/patientStore";
 import { ROUTES } from "@/utils/constants";
+import Spinner from "@/components/ui/Spinner";
 
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
 
 const patientSchema = z.object({
-  historiaClinica: z.string().min(1, "Historia clínica es requerida"),
+  historiaClinica: z.string().min(1, "Historia clínica es requerida").transform((s) => s.trim()),
   dni: z
     .string()
     .length(8, "DNI debe tener 8 dígitos")
-    .regex(/^\d+$/, "Solo números"),
-  nombres: z.string().min(1, "Nombres es requerido"),
-  apellidoPaterno: z.string().min(1, "Apellido paterno es requerido"),
-  apellidoMaterno: z.string().min(1, "Apellido materno es requerido"),
-  fechaNacimiento: z.string().min(1, "Fecha de nacimiento es requerida"),
+    .regex(/^\d+$/, "Solo números")
+    .transform((s) => s.trim()),
+  nombres: z.string().min(1, "Nombres es requerido").transform((s) => s.trim()),
+  apellidoPaterno: z.string().min(1, "Apellido paterno es requerido").transform((s) => s.trim()),
+  apellidoMaterno: z.string().min(1, "Apellido materno es requerido").transform((s) => s.trim()),
+  fechaNacimiento: z
+    .string()
+    .min(1, "Fecha de nacimiento es requerida")
+    .refine(
+      (val) => {
+        const date = new Date(val);
+        return date <= new Date();
+      },
+      { message: "La fecha de nacimiento no puede ser futura" },
+    ),
   sexo: z.enum(["M", "F"], { required_error: "Seleccione sexo" }),
   centroPobladoId: z.string().min(1, "Seleccione centro poblado"),
-  nombreApoderado: z.string().min(1, "Apoderado es requerido"),
+  nombreApoderado: z.string().min(1, "Apoderado es requerido").transform((s) => s.trim()),
   celularApoderado: z
     .string()
     .regex(/^\d{9}$/, "Debe tener 9 dígitos")
@@ -171,10 +182,7 @@ export default function PatientFormPage() {
     return (
       <div className="flex min-h-[40vh] items-center justify-center p-6">
         <div className="flex items-center gap-2 text-neutral-400">
-          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <Spinner size="md" />
           <span className="text-sm">Cargando datos del paciente...</span>
         </div>
       </div>
@@ -387,10 +395,7 @@ export default function PatientFormPage() {
           >
             {isSubmitting || loading ? (
               <span className="flex items-center gap-1">
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <Spinner size="sm" />
                 Guardando...
               </span>
             ) : isEditMode ? (

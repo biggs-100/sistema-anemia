@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/utils/constants";
+import Spinner from "@/components/ui/Spinner";
 
 interface AuthGuardProps {
   requiredRoles?: number[];
@@ -18,7 +19,7 @@ export default function AuthGuard({ requiredRoles }: AuthGuardProps) {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <Spinner size="lg" className="text-blue-600" />
       </div>
     );
   }

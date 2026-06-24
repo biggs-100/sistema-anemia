@@ -1,5 +1,7 @@
 import type { Treatment } from '@/types';
 import TreatmentBadge from './TreatmentBadge';
+import { formatDate } from '@/utils/format';
+import Spinner from '@/components/ui/Spinner';
 
 interface TreatmentListProps {
   treatments: Treatment[];
@@ -14,14 +16,23 @@ export default function TreatmentList({
   onFinish,
   onSuspend,
 }: TreatmentListProps) {
+  const handleSuspend = (id: number) => {
+    if (window.confirm('¿Está seguro de suspender este tratamiento?')) {
+      onSuspend?.(id);
+    }
+  };
+
+  const handleFinish = (id: number) => {
+    if (window.confirm('¿Está seguro de finalizar este tratamiento?')) {
+      onFinish?.(id);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2 text-neutral-400">
-          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <Spinner size="md" />
           <span className="text-sm">Cargando tratamientos...</span>
         </div>
       </div>
@@ -80,10 +91,10 @@ export default function TreatmentList({
                 {t.frecuencia}
               </td>
               <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
-                {t.fechaInicio}
+                {formatDate(t.fechaInicio)}
               </td>
               <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
-                {t.fechaFin ?? '—'}
+                {t.fechaFin ? formatDate(t.fechaFin) : '—'}
               </td>
               <td className="whitespace-nowrap px-4 py-3">
                 <TreatmentBadge estado={t.estado} />
@@ -93,7 +104,7 @@ export default function TreatmentList({
                   <div className="flex gap-2">
                     {onFinish && (
                       <button
-                        onClick={() => onFinish(t.id)}
+                        onClick={() => handleFinish(t.id)}
                         className="rounded bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
                       >
                         Finalizar
@@ -101,7 +112,7 @@ export default function TreatmentList({
                     )}
                     {onSuspend && (
                       <button
-                        onClick={() => onSuspend(t.id)}
+                        onClick={() => handleSuspend(t.id)}
                         className="rounded bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100"
                       >
                         Suspender

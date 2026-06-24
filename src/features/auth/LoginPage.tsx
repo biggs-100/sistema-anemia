@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/utils/constants";
@@ -6,6 +6,12 @@ import { ROUTES } from "@/utils/constants";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, isLoading, error, clearError } = useAuthStore();
+
+  // Clear auth errors when navigating to the login page
+  useEffect(() => {
+    clearError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
 
