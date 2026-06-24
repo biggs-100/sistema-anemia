@@ -14,6 +14,7 @@ pub struct CreatePatientDTO {
     pub apellido_materno: String,
     pub fecha_nacimiento: String,
     pub sexo: String,
+    pub direccion: Option<String>,
     pub centro_poblado_id: Option<i64>,
     pub nombre_apoderado: Option<String>,
     pub celular_apoderado: Option<String>,
@@ -30,6 +31,7 @@ pub struct UpdatePatientDTO {
     pub apellido_materno: Option<String>,
     pub fecha_nacimiento: Option<String>,
     pub sexo: Option<String>,
+    pub direccion: Option<String>,
     pub centro_poblado_id: Option<i64>,
     pub nombre_apoderado: Option<String>,
     pub celular_apoderado: Option<String>,
@@ -41,21 +43,23 @@ pub struct UpdatePatientDTO {
 pub struct CreateControlDTO {
     pub paciente_id: i64,
     pub fecha_control: String,
+    pub edad_meses: Option<i32>,
     pub peso: Option<f64>,
     pub talla: Option<f64>,
     pub hemoglobina: Option<f64>,
-    pub diagnostico: Option<String>,
-    pub tratamiento_id: Option<i64>,
+    pub temperatura: Option<f64>,
     pub observaciones: Option<String>,
+    pub usuario_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateTreatmentDTO {
     pub paciente_id: i64,
-    pub fecha_inicio: String,
-    pub tipo_tratamiento: String,
+    pub medicamento_id: i64,
     pub dosis: Option<String>,
+    pub frecuencia: Option<String>,
+    pub fecha_inicio: String,
     pub observaciones: Option<String>,
 }
 
@@ -64,6 +68,25 @@ pub struct CreateTreatmentDTO {
 pub struct LoginDTO {
     pub usuario: String,
     pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateUserDTO {
+    pub usuario: String,
+    pub password: String,
+    pub nombres: String,
+    pub apellidos: String,
+    pub rol_id: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateUserDTO {
+    pub nombres: Option<String>,
+    pub apellidos: Option<String>,
+    pub rol_id: Option<i64>,
+    pub activo: Option<bool>,
 }
 
 // ---------------------------------------------------------------------------

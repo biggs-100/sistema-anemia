@@ -11,3 +11,4 @@ backups/
 logs/
 .DS_Store
 *.log
+src-tauri/gen/

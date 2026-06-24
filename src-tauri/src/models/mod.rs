@@ -1,6 +1,11 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
+// ---------------------------------------------------------------------------
+// Domain entities matching the DB schema. All use serde(rename_all = "camelCase")
+// for JSON consistency with the TypeScript frontend.
+// ---------------------------------------------------------------------------
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Patient {
@@ -12,11 +17,14 @@ pub struct Patient {
     pub apellido_materno: String,
     pub fecha_nacimiento: String,
     pub sexo: String,
+    pub direccion: Option<String>,
     pub centro_poblado_id: Option<i64>,
     pub nombre_apoderado: Option<String>,
     pub celular_apoderado: Option<String>,
+    pub fecha_registro: Option<String>,
     pub activo: bool,
     pub creado_en: Option<NaiveDateTime>,
+    pub actualizado_en: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,12 +33,13 @@ pub struct Control {
     pub id: i64,
     pub paciente_id: i64,
     pub fecha_control: String,
+    pub edad_meses: Option<i32>,
     pub peso: Option<f64>,
     pub talla: Option<f64>,
     pub hemoglobina: Option<f64>,
-    pub diagnostico: Option<String>,
-    pub tratamiento_id: Option<i64>,
+    pub temperatura: Option<f64>,
     pub observaciones: Option<String>,
+    pub usuario_id: Option<i64>,
     pub creado_en: Option<NaiveDateTime>,
 }
 
@@ -39,13 +48,13 @@ pub struct Control {
 pub struct Treatment {
     pub id: i64,
     pub paciente_id: i64,
+    pub medicamento_id: i64,
+    pub dosis: Option<String>,
+    pub frecuencia: Option<String>,
     pub fecha_inicio: String,
     pub fecha_fin: Option<String>,
-    pub tipo_tratamiento: String,
-    pub dosis: Option<String>,
-    pub activo: bool,
+    pub estado: String,
     pub observaciones: Option<String>,
-    pub creado_en: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,6 +62,8 @@ pub struct Treatment {
 pub struct User {
     pub id: i64,
     pub usuario: String,
+    #[serde(skip_serializing)]
+    pub password_hash: String,
     pub nombres: String,
     pub apellidos: String,
     pub rol_id: i64,
@@ -75,6 +86,7 @@ pub struct CentroPoblado {
     pub distrito: Option<String>,
     pub provincia: Option<String>,
     pub departamento: Option<String>,
+    pub activo: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,28 +95,79 @@ pub struct Alerta {
     pub id: i64,
     pub paciente_id: i64,
     pub tipo: String,
-    pub mensaje: String,
-    pub leida: bool,
-    pub creada_en: Option<NaiveDateTime>,
+    pub descripcion: Option<String>,
+    pub fecha_generada: Option<NaiveDateTime>,
+    pub resuelta: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuditLog {
     pub id: i64,
-    pub usuario: String,
+    pub usuario_id: Option<i64>,
     pub accion: String,
-    pub tabla: String,
-    pub registro_id: i64,
+    pub tabla_afectada: String,
+    pub registro_id: Option<i64>,
+    pub datos_anteriores: Option<String>,
+    pub datos_nuevos: Option<String>,
     pub fecha: Option<NaiveDateTime>,
+    pub ip_local: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BackupHistory {
     pub id: i64,
-    pub filename: String,
-    pub file_size: i64,
-    pub checksum: String,
-    pub creado_en: Option<NaiveDateTime>,
+    pub nombre_archivo: String,
+    pub tamaño_mb: f64,
+    pub fecha_generacion: Option<NaiveDateTime>,
+    pub resultado: String,
+    pub checksum: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Medicamento {
+    pub id: i64,
+    pub nombre: String,
+    pub activo: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VisitaDomiciliaria {
+    pub id: i64,
+    pub paciente_id: i64,
+    pub fecha_visita: String,
+    pub responsable: Option<String>,
+    pub resultado: Option<String>,
+    pub observaciones: Option<String>,
+}
+
+/// Hemoglobin classification per Peruvian clinical guidelines (PRD-003 §6).
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum HemoglobinaClasificacion {
+    Normal,
+    Leve,
+    Moderada,
+    Severa,
+}
+
+/// Classifies a hemoglobin value into a severity level.
+///
+/// * `Normal`   — hb >= 11.0 g/dL
+/// * `Leve`     — 10.0 <= hb < 11.0
+/// * `Moderada` — 7.0  <= hb < 10.0
+/// * `Severa`   — hb < 7.0
+pub fn classify_hemoglobina(hb: f64) -> HemoglobinaClasificacion {
+    if hb >= 11.0 {
+        HemoglobinaClasificacion::Normal
+    } else if hb >= 10.0 {
+        HemoglobinaClasificacion::Leve
+    } else if hb >= 7.0 {
+        HemoglobinaClasificacion::Moderada
+    } else {
+        HemoglobinaClasificacion::Severa
+    }
 }
