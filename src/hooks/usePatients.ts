@@ -90,6 +90,52 @@ export function usePatientDetail(id: number) {
 }
 
 // ---------------------------------------------------------------------------
+// Hook for patient search dropdown (used in standalone TreatmentsPage)
+// ---------------------------------------------------------------------------
+import { useState, useEffect, useRef } from "react";
+import { patientService } from "@/services/patientService";
+import { useAuthStore } from "@/stores/authStore";
+import type { Patient } from "@/types";
+
+export function usePatientSearch(query: string) {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!query || query.length < 2) {
+      setPatients([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const token = useAuthStore.getState().token;
+        if (!token) return;
+        const result = await patientService.list(token, query, 1, 10);
+        setPatients(result.data);
+      } catch {
+        setPatients([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
+
+  return { patients, loading } as const;
+}
+
+// ---------------------------------------------------------------------------
 // Hook for form page: create / update
 // ---------------------------------------------------------------------------
 export function usePatientForm() {

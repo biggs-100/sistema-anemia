@@ -2,10 +2,13 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePatientDetail } from "@/hooks/usePatients";
 import { useControls } from "@/hooks/useControls";
+import { useTreatments, useFinishTreatment, useSuspendTreatment } from "@/hooks/useTreatments";
 import { ROUTES, SEXO_LABELS } from "@/utils/constants";
 import ControlTable from "@/features/controls/components/ControlTable";
 import HbEvolutionChart from "@/features/controls/components/HbEvolutionChart";
 import ControlForm from "@/features/controls/components/ControlForm";
+import TreatmentList from "@/features/treatments/components/TreatmentList";
+import TreatmentForm from "@/features/treatments/components/TreatmentForm";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,7 +73,8 @@ export default function PatientDetailPage() {
   const patientId = id ? Number(id) : 0;
   const { patient, loading, error, loadPatient, clearError } = usePatientDetail(patientId);
   const [activeTab, setActiveTab] = useState<TabId>("datos");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [controlModalOpen, setControlModalOpen] = useState(false);
+  const [treatmentModalOpen, setTreatmentModalOpen] = useState(false);
 
   // Load controls for the Controles tab
   const {
@@ -81,6 +85,14 @@ export default function PatientDetailPage() {
     loading: controlsLoading,
     setPage,
   } = useControls(activeTab === "controles" ? patientId : 0);
+
+  // Load treatments for the Tratamientos tab
+  const {
+    treatments,
+    loading: treatmentsLoading,
+  } = useTreatments(activeTab === "tratamientos" ? patientId : 0);
+  const { finishTreatment } = useFinishTreatment();
+  const { suspendTreatment } = useSuspendTreatment();
 
   // Loading state
   if (loading) {
@@ -246,7 +258,7 @@ export default function PatientDetailPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-neutral-900">Controles</h3>
               <button
-                onClick={() => setModalOpen(true)}
+                onClick={() => setControlModalOpen(true)}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 + Nuevo Control
@@ -270,13 +282,23 @@ export default function PatientDetailPage() {
 
         {activeTab === "tratamientos" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-neutral-900">Tratamientos</h3>
-            <div className="rounded-lg border-2 border-dashed border-neutral-200 p-8 text-center">
-              <p className="text-sm text-neutral-400">Historial de tratamientos — próximamente</p>
-              <p className="mt-1 text-xs text-neutral-300">
-                Esta sección mostrará los tratamientos del paciente
-              </p>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-neutral-900">Tratamientos</h3>
+              <button
+                onClick={() => setTreatmentModalOpen(true)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                + Nuevo Tratamiento
+              </button>
             </div>
+
+            {/* Treatment list */}
+            <TreatmentList
+              treatments={treatments}
+              loading={treatmentsLoading}
+              onFinish={(id) => finishTreatment(id)}
+              onSuspend={(id) => suspendTreatment(id)}
+            />
           </div>
         )}
 
@@ -295,11 +317,21 @@ export default function PatientDetailPage() {
 
       {/* Control Form Modal */}
       <ControlForm
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        isOpen={controlModalOpen}
+        onClose={() => setControlModalOpen(false)}
         pacienteId={patientId}
         onSuccess={() => {
           // Control was created — table will auto-refresh via useControls
+        }}
+      />
+
+      {/* Treatment Form Modal */}
+      <TreatmentForm
+        isOpen={treatmentModalOpen}
+        onClose={() => setTreatmentModalOpen(false)}
+        pacienteId={patientId}
+        onSuccess={() => {
+          // Treatment was created — list will auto-refresh via useTreatments
         }}
       />
     </div>

@@ -1,34 +1,30 @@
-export type TreatmentStatus = "activo" | "completado" | "suspendido";
+export type TreatmentState = 'activo' | 'suspendido' | 'finalizado';
 
 export interface Treatment {
   id: number;
   pacienteId: number;
+  pacienteNombre: string;
   medicamentoId: number;
-  fechaInicio: string;
-  fechaFin?: string;
+  medicamentoNombre: string;
   dosis: string;
   frecuencia: string;
-  duracionDias: number;
-  estado: TreatmentStatus;
-  observaciones?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  fechaInicio: string;
+  fechaFin: string | null;
+  estado: TreatmentState;
+  observaciones: string | null;
 }
 
 export interface CreateTreatmentDTO {
   pacienteId: number;
   medicamentoId: number;
-  fechaInicio: string;
   dosis: string;
   frecuencia: string;
-  duracionDias: number;
+  fechaInicio: string;
+  fechaFin?: string;
   observaciones?: string;
 }
 
 export interface Medicamento {
   id: number;
   nombre: string;
-  descripcion?: string;
-  presentacion?: string;
-  activo?: boolean;
 }

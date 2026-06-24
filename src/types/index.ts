@@ -19,9 +19,9 @@ export type {
 
 export type {
   Treatment,
+  TreatmentState,
   CreateTreatmentDTO,
   Medicamento,
-  TreatmentStatus,
 } from "./treatment";
 
 export type {

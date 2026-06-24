@@ -4,6 +4,7 @@ pub mod dashboard;
 pub mod patients;
 pub mod controls;
 pub mod treatments;
+pub mod medicamentos;
 pub mod reports;
 pub mod backups;
 pub mod users;

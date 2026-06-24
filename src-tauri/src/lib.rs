@@ -98,6 +98,7 @@ pub fn run() {
             let treatment_service = TreatmentService::new(
                 Box::new(treatment_repo),
                 AuditService::new(pool.clone()),
+                pool.clone(),
             );
 
             let backup_service = BackupService::new(backup_manager);
@@ -141,8 +142,11 @@ pub fn run() {
             commands::controls::get_controls,
             commands::controls::get_controls_by_date_range,
             commands::treatments::create_treatment,
+            commands::treatments::update_treatment,
             commands::treatments::finish_treatment,
+            commands::treatments::suspend_treatment,
             commands::treatments::get_treatments,
+            commands::medicamentos::list_medicamentos,
             commands::reports::generate_pdf,
             commands::reports::generate_excel,
             commands::backups::create_backup,

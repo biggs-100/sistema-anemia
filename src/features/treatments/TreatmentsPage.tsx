@@ -1,24 +1,34 @@
-import { ROUTES } from "@/utils/constants";
-
-// Placeholder mapping for status badges
-const statusColors: Record<string, string> = {
-  activo: "bg-green-100 text-green-800",
-  completado: "bg-blue-100 text-blue-800",
-  suspendido: "bg-red-100 text-red-800",
-};
-
-const statusLabels: Record<string, string> = {
-  activo: "Activo",
-  completado: "Completado",
-  suspendido: "Suspendido",
-};
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTreatments, useFinishTreatment, useSuspendTreatment } from '@/hooks/useTreatments';
+import { usePatientSearch } from '@/hooks/usePatients';
+import { ROUTES } from '@/utils/constants';
+import TreatmentList from '@/features/treatments/components/TreatmentList';
+import TreatmentForm from '@/features/treatments/components/TreatmentForm';
 
 export default function TreatmentsPage() {
-  // Tauri invoke("get_treatments") will load treatments
-  // For now, show the table structure as a placeholder
+  const navigate = useNavigate();
+  const [selectedPacienteId, setSelectedPacienteId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [treatmentFormOpen, setTreatmentFormOpen] = useState(false);
+
+  const { patients, loading: searchLoading } = usePatientSearch(searchQuery);
+  const { treatments, loading: treatmentsLoading } = useTreatments(selectedPacienteId ?? 0);
+  const { finishTreatment } = useFinishTreatment();
+  const { suspendTreatment } = useSuspendTreatment();
+
+  const handlePatientSelect = useCallback((id: number) => {
+    setSelectedPacienteId(id);
+    setSearchQuery('');
+  }, []);
+
+  const selectedPatientName = selectedPacienteId
+    ? patients.find((p) => p.id === selectedPacienteId)?.nombres ?? ''
+    : '';
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-neutral-900">Tratamientos</h2>
@@ -26,69 +36,112 @@ export default function TreatmentsPage() {
             Gestión de tratamientos con hierro
           </p>
         </div>
-        <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-          + Nuevo Tratamiento
-        </button>
+        {selectedPacienteId && (
+          <button
+            onClick={() => setTreatmentFormOpen(true)}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            + Nuevo Tratamiento
+          </button>
+        )}
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Buscar por paciente..."
-          className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      {/* Patient Search / Selector */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Seleccionar Paciente
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar por nombre, DNI o historia clínica..."
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          {searchQuery && (
+            <div className="absolute z-10 mt-1 w-full rounded-md border border-neutral-200 bg-white shadow-lg">
+              {searchLoading ? (
+                <div className="px-3 py-4 text-center text-sm text-neutral-400">
+                  Buscando...
+                </div>
+              ) : patients.length === 0 ? (
+                <div className="px-3 py-4 text-center text-sm text-neutral-400">
+                  No se encontraron pacientes
+                </div>
+              ) : (
+                <ul className="max-h-60 overflow-auto py-1">
+                  {patients.map((p) => (
+                    <li key={p.id}>
+                      <button
+                        onClick={() => handlePatientSelect(p.id)}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-neutral-50 ${
+                          selectedPacienteId === p.id
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-neutral-700'
+                        }`}
+                      >
+                        <span className="font-medium">
+                          {p.apellidoPaterno} {p.apellidoMaterno}, {p.nombres}
+                        </span>
+                        <span className="ml-2 text-neutral-400">
+                          HC: {p.historiaClinica} | DNI: {p.dni}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+        {selectedPacienteId && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-sm text-neutral-500">Paciente seleccionado:</span>
+            <span className="text-sm font-medium text-neutral-900">
+              {patients.find((p) => p.id === selectedPacienteId)
+                ? `${selectedPatientName} ${patients.find((p) => p.id === selectedPacienteId)?.apellidoPaterno}`
+                : `ID: ${selectedPacienteId}`}
+            </span>
+            <button
+              onClick={() => {
+                setSelectedPacienteId(null);
+              }}
+              className="text-xs text-blue-600 hover:text-blue-700"
+            >
+              Cambiar
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Treatment list */}
+      {selectedPacienteId ? (
+        <TreatmentList
+          treatments={treatments}
+          loading={treatmentsLoading}
+          onFinish={(id) => finishTreatment(id)}
+          onSuspend={(id) => suspendTreatment(id)}
         />
-        <select className="rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none">
-          <option value="">Todos los estados</option>
-          <option value="activo">Activo</option>
-          <option value="completado">Completado</option>
-          <option value="suspendido">Suspendido</option>
-        </select>
-        <button className="rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200">
-          Filtrar
-        </button>
-      </div>
+      ) : (
+        <div className="rounded-lg border-2 border-dashed border-neutral-200 p-12 text-center">
+          <p className="text-sm text-neutral-400">
+            Seleccione un paciente para ver sus tratamientos
+          </p>
+        </div>
+      )}
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-neutral-200">
-          <thead className="bg-neutral-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                Paciente
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                Medicamento
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                Fecha Inicio
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                Dosis
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                Duración
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                Estado
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-200">
-            <tr>
-              <td
-                colSpan={7}
-                className="px-4 py-12 text-center text-sm text-neutral-400"
-              >
-                No hay tratamientos registrados
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {/* Treatment Form Modal */}
+      {selectedPacienteId && (
+        <TreatmentForm
+          isOpen={treatmentFormOpen}
+          onClose={() => setTreatmentFormOpen(false)}
+          pacienteId={selectedPacienteId}
+          onSuccess={() => {
+            // List auto-refreshes via useTreatments
+          }}
+        />
+      )}
     </div>
   );
 }

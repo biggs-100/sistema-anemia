@@ -136,6 +136,40 @@ pub struct SearchResult<T: Serialize> {
     pub page_size: i64,
 }
 
+/// Public-facing treatment response with patient and medication names.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TreatmentResponse {
+    pub id: i64,
+    pub paciente_id: i64,
+    pub paciente_nombre: String,
+    pub medicamento_id: i64,
+    pub medicamento_nombre: String,
+    pub dosis: Option<String>,
+    pub frecuencia: Option<String>,
+    pub fecha_inicio: String,
+    pub fecha_fin: Option<String>,
+    pub estado: String,
+    pub observaciones: Option<String>,
+}
+
+/// Public-facing medicamento response for dropdowns.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MedicamentoResponse {
+    pub id: i64,
+    pub nombre: String,
+}
+
+/// DTO for updating a treatment's mutable fields.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTreatmentDTO {
+    pub dosis: Option<String>,
+    pub frecuencia: Option<String>,
+    pub observaciones: Option<String>,
+}
+
 /// Public-facing control response with computed `clasificacion`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

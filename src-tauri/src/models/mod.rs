@@ -139,7 +139,7 @@ pub struct BackupHistory {
     pub checksum: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Medicamento {
     pub id: i64,

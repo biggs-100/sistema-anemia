@@ -37,8 +37,11 @@ export const API_COMMANDS = {
 
   // Treatments
   CREATE_TREATMENT: "create_treatment",
+  UPDATE_TREATMENT: "update_treatment",
   FINISH_TREATMENT: "finish_treatment",
+  SUSPEND_TREATMENT: "suspend_treatment",
   GET_TREATMENTS: "get_treatments",
+  LIST_MEDICAMENTOS: "list_medicamentos",
 
   // Reports
   GENERATE_PDF: "generate_pdf",
