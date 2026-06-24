@@ -40,6 +40,12 @@ impl BackupManager {
         let backup_filename = format!("anemia_backup_{}.db", timestamp);
         let backup_path = self.backups_dir.join(&backup_filename);
 
+        // Checkpoint WAL to ensure consistent snapshot before copying
+        sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AppError::Backup(format!("Failed to checkpoint WAL: {e}")))?;
+
         // Copy file
         tokio::fs::copy(&self.db_path, &backup_path)
             .await
@@ -183,6 +189,24 @@ impl BackupManager {
         .execute(&self.pool)
         .await
         .map_err(|e| AppError::Database(format!("Retention cleanup failed: {e}")))?;
+
+        // Clean up orphaned backup files that no longer have a DB record
+        if let Ok(entries) = std::fs::read_dir(&self.backups_dir) {
+            let valid_names: Vec<String> = sqlx::query_scalar("SELECT nombre_archivo FROM backup_history")
+                .fetch_all(&self.pool)
+                .await
+                .unwrap_or_default();
+
+            for entry in entries.flatten() {
+                if let Some(name) = entry.file_name().to_str() {
+                    if name.starts_with("anemia_backup_") && name.ends_with(".db") {
+                        if !valid_names.contains(&name.to_string()) {
+                            let _ = std::fs::remove_file(entry.path());
+                        }
+                    }
+                }
+            }
+        }
 
         Ok(())
     }

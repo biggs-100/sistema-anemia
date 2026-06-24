@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useTreatmentStore } from '@/stores/treatmentStore';
-import type { CreateTreatmentDTO } from '@/types';
 
 // ---------------------------------------------------------------------------
 // Hook for listing treatments by patient

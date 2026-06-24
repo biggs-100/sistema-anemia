@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from "react";
 import { useControlStore } from "@/stores/controlStore";
-import type { CreateControlDTO } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Hook for listing controls by patient with pagination

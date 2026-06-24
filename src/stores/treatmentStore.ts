@@ -6,6 +6,7 @@ import type { Treatment, CreateTreatmentDTO, Medicamento } from '@/types';
 interface TreatmentState {
   treatments: Treatment[];
   medicamentos: Medicamento[];
+  medicamentosLoaded: boolean;
   currentPacienteId: number | null;
   loading: boolean;
   error: string | null;
@@ -22,6 +23,7 @@ interface TreatmentState {
 export const useTreatmentStore = create<TreatmentState>((set, get) => ({
   treatments: [],
   medicamentos: [],
+  medicamentosLoaded: false,
   currentPacienteId: null,
   loading: false,
   error: null,
@@ -110,6 +112,8 @@ export const useTreatmentStore = create<TreatmentState>((set, get) => ({
   },
 
   loadMedicamentos: async () => {
+    if (get().medicamentosLoaded) return; // cache hit — already loaded
+
     const token = useAuthStore.getState().token;
     if (!token) {
       set({ error: 'No hay sesión activa', loading: false });
@@ -118,7 +122,7 @@ export const useTreatmentStore = create<TreatmentState>((set, get) => ({
 
     try {
       const medicamentos = await treatmentService.listMedicamentos(token);
-      set({ medicamentos, error: null });
+      set({ medicamentos, medicamentosLoaded: true, error: null });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al cargar medicamentos';
       set({ error: message });

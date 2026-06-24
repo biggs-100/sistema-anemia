@@ -8,7 +8,7 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { usePatientList } from "@/hooks/usePatients";
-import { ROUTES, SEXO_LABELS } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants";
 import type { Patient } from "@/types";
 import Spinner from "@/components/ui/Spinner";
 

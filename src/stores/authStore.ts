@@ -98,9 +98,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   changePassword: async (oldPassword: string, newPassword: string) => {
-    const { token } = get();
-    if (!token) throw new Error("No hay sesión activa");
-    await authService.changePassword(token, oldPassword, newPassword);
+    set({ isLoading: true, error: null });
+    try {
+      const { token } = get();
+      if (!token) throw new Error("No hay sesión activa");
+      await authService.changePassword(token, oldPassword, newPassword);
+      set({ isLoading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error al cambiar contraseña";
+      set({ error: message, isLoading: false });
+      throw err;
+    }
   },
 
   clearError: () => set({ error: null }),

@@ -33,7 +33,7 @@ export const useAlertaStore = create<AlertaState>((set, get) => ({
   pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   loading: false,
   error: null,
-  filters: { tipo: "", resuelta: false },
+  filters: { tipo: "", resuelta: null },
 
   loadAlertas: async (page?: number) => {
     const token = useAuthStore.getState().token;

@@ -39,6 +39,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       {
+        // Any authenticated user
         element: <AuthGuard />,
         children: [
           { path: "dashboard", element: <SuspenseWrapper><DashboardPage /></SuspenseWrapper> },
@@ -50,6 +51,12 @@ const router = createBrowserRouter([
           { path: "treatments", element: <SuspenseWrapper><TreatmentsPage /></SuspenseWrapper> },
           { path: "reports", element: <SuspenseWrapper><ReportsPage /></SuspenseWrapper> },
           { path: "alerts", element: <SuspenseWrapper><AlertsPage /></SuspenseWrapper> },
+        ],
+      },
+      {
+        // Admin only (rolId === 1)
+        element: <AuthGuard requiredRoles={[1]} />,
+        children: [
           { path: "users", element: <SuspenseWrapper><UsersPage /></SuspenseWrapper> },
           { path: "settings", element: <SuspenseWrapper><SettingsPage /></SuspenseWrapper> },
         ],

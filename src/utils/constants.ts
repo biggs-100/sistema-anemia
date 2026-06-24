@@ -46,6 +46,7 @@ export const API_COMMANDS = {
   // Reports
   GENERATE_PDF: "generate_pdf",
   GENERATE_EXCEL: "generate_excel",
+  GENERATE_CSV: "generate_csv",
 
   // Backups
   CREATE_BACKUP: "create_backup",

@@ -84,9 +84,8 @@ export const useControlStore = create<ControlState>((set, get) => ({
     if (state.currentPacienteId !== null) {
       set({ page });
       state.loadControls(state.currentPacienteId, page);
-    } else {
-      set({ page });
     }
+    // If no patient selected, silently ignore page change
   },
 
   clearControls: () => {
