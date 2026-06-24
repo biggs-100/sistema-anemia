@@ -30,7 +30,7 @@ pub async fn create_backup(
 pub async fn restore_backup(
     app: AppHandle,
     token: String,
-    path: String,
+    id: i64,
 ) -> Result<ApiResponse<()>, String> {
     let state: State<AppState> = app.state();
     let _user = state
@@ -41,7 +41,7 @@ pub async fn restore_backup(
 
     state
         .backup_service
-        .restore_backup(&path)
+        .restore_backup_by_id(id)
         .await
         .map_err(|e| e.to_string())
 }

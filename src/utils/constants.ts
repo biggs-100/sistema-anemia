@@ -60,6 +60,11 @@ export const API_COMMANDS = {
   CREATE_USER: "create_user",
   UPDATE_USER: "update_user",
   DEACTIVATE_USER: "deactivate_user",
+
+  // Alerts
+  LIST_ALERTAS: "list_alertas",
+  RESOLVER_ALERTA: "resolver_alerta",
+  RESOLVER_TODAS_ALERTAS: "resolver_todas_alertas",
 } as const;
 
 export const ANEMIA_THRESHOLDS = {

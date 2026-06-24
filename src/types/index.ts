@@ -37,3 +37,12 @@ export type {
   CreateUserDTO,
   UpdateUserDTO,
 } from "./user";
+
+export type {
+  Alerta,
+  TipoAlerta,
+} from "./alerta";
+
+export type {
+  Backup,
+} from "./backup";

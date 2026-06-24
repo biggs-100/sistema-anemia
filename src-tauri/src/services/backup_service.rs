@@ -25,6 +25,12 @@ impl BackupService {
         Ok(ApiResponse::success(()))
     }
 
+    /// Restores a backup by its database ID (resolves file path internally).
+    pub async fn restore_backup_by_id(&self, id: i64) -> Result<ApiResponse<()>, AppError> {
+        self.manager.restore_backup_by_id(id).await?;
+        Ok(ApiResponse::success(()))
+    }
+
     /// Lists all available backups.
     pub async fn list_backups(&self) -> Result<ApiResponse<Vec<BackupHistory>>, AppError> {
         let backups = self.manager.list_backups().await?;

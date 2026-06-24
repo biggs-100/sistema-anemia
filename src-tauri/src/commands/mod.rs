@@ -1,3 +1,4 @@
+pub mod alertas;
 pub mod auth;
 pub mod centros_poblados;
 pub mod dashboard;

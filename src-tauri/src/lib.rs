@@ -128,6 +128,9 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::alertas::list_alertas,
+            commands::alertas::resolver_alerta,
+            commands::alertas::resolver_todas_alertas,
             commands::auth::login,
             commands::auth::logout,
             commands::auth::current_user,

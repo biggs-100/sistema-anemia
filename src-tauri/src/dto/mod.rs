@@ -192,6 +192,19 @@ pub struct ControlResponse {
 /// Return type for `create_control` command — identical to `ControlResponse`.
 pub type CreateControlResponse = ControlResponse;
 
+/// Public-facing alert response with patient name.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AlertaResponse {
+    pub id: i64,
+    pub paciente_id: i64,
+    pub paciente_nombre: Option<String>,
+    pub tipo: String,
+    pub descripcion: Option<String>,
+    pub fecha: Option<String>,
+    pub resuelta: bool,
+}
+
 // ---------------------------------------------------------------------------
 // Generic API Response
 // ---------------------------------------------------------------------------

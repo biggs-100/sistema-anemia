@@ -1,36 +1,180 @@
-import { useState } from "react";
+import { useEffect, useMemo } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  type ColumnDef,
+} from "@tanstack/react-table";
+import { useAlertaStore } from "@/stores/alertaStore";
+import { useAuthStore } from "@/stores/authStore";
+import type { Alerta, TipoAlerta } from "@/types";
 
-interface Alert {
-  id: number;
-  tipo: string;
-  descripcion: string;
-  fechaGenerada: string;
-  pacienteNombre?: string;
-  resuelta: boolean;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const TIPO_BADGE: Record<TipoAlerta, string> = {
+  HEMOGLOBINA_CRITICA: "bg-red-100 text-red-800",
+  CONTROL_VENCIDO: "bg-amber-100 text-amber-800",
+  TRATAMIENTO_VENCIDO: "bg-orange-100 text-orange-800",
+};
+
+const TIPO_LABELS: Record<TipoAlerta, string> = {
+  HEMOGLOBINA_CRITICA: "Hb Crítica",
+  CONTROL_VENCIDO: "Control Vencido",
+  TRATAMIENTO_VENCIDO: "Tratamiento Vencido",
+};
+
+function formatDate(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("es-PE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return dateStr;
+  }
 }
 
-// Placeholder data for structure demonstration
-const placeholderAlerts: Alert[] = [];
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function AlertsPage() {
-  const [filter, setFilter] = useState<"all" | "pending" | "resolved">("pending");
+  const {
+    alertas,
+    total,
+    page,
+    pageSize,
+    loading,
+    error,
+    filters,
+    loadAlertas,
+    resolveAlerta,
+    resolveAll,
+    setPage,
+    setFilter,
+    clearError,
+  } = useAlertaStore();
 
-  // Tauri invoke calls will load real alerts:
-  // useEffect(() => { invoke("get_alertas")... }, [])
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.rolId === 1;
 
-  const filteredAlerts =
-    filter === "all"
-      ? placeholderAlerts
-      : filter === "pending"
-        ? placeholderAlerts.filter((a) => !a.resuelta)
-        : placeholderAlerts.filter((a) => a.resuelta);
+  // Load on mount and when filters change
+  useEffect(() => {
+    loadAlertas(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleResolve = async (_alertId: number) => {
-    // Tauri invoke("resolve_alerta", { id: alertId })
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+
+  const columns = useMemo<ColumnDef<Alerta>[]>(
+    () => [
+      {
+        header: "Fecha",
+        accessorKey: "fecha",
+        cell: (info) => (
+          <span className="text-sm text-neutral-600">{formatDate(info.getValue<string>())}</span>
+        ),
+      },
+      {
+        header: "Paciente",
+        accessorKey: "pacienteNombre",
+        cell: (info) => (
+          <span className="text-sm font-medium text-neutral-900">
+            {info.getValue<string>() ?? "—"}
+          </span>
+        ),
+      },
+      {
+        header: "Tipo",
+        accessorKey: "tipo",
+        cell: (info) => {
+          const tipo = info.getValue<TipoAlerta>();
+          return (
+            <span
+              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                TIPO_BADGE[tipo] ?? "bg-neutral-100 text-neutral-700"
+              }`}
+            >
+              {TIPO_LABELS[tipo] ?? tipo}
+            </span>
+          );
+        },
+      },
+      {
+        header: "Descripción",
+        accessorKey: "descripcion",
+        cell: (info) => (
+          <span className="text-sm text-neutral-600 max-w-xs truncate block">
+            {info.getValue<string>() ?? "—"}
+          </span>
+        ),
+      },
+      {
+        header: "Estado",
+        accessorKey: "resuelta",
+        cell: (info) => {
+          const resuelta = info.getValue<boolean>();
+          return (
+            <span
+              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                resuelta ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              }`}
+            >
+              {resuelta ? "Resuelta" : "Pendiente"}
+            </span>
+          );
+        },
+      },
+      {
+        header: "Acciones",
+        id: "acciones",
+        cell: (info) => {
+          const alerta = info.row.original;
+          if (!alerta.resuelta && isAdmin) {
+            return (
+              <button
+                onClick={() => resolveAlerta(alerta.id)}
+                className="rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50"
+              >
+                Resolver
+              </button>
+            );
+          }
+          return null;
+        },
+      },
+    ],
+    [isAdmin, resolveAlerta],
+  );
+
+  const table = useReactTable({
+    data: alertas,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    pageCount: totalPages,
+  });
+
+  const handleResolveAll = async () => {
+    if (!window.confirm("¿Resolver todas las alertas pendientes?")) return;
+    try {
+      await resolveAll();
+    } catch {
+      // error displayed in store
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-neutral-900">Alertas</h2>
@@ -38,88 +182,131 @@ export default function AlertsPage() {
             Alertas y notificaciones del sistema
           </p>
         </div>
-      </div>
-
-      {/* Filter tabs */}
-      <div className="flex gap-2">
-        {([
-          { key: "pending", label: "Pendientes" },
-          { key: "resolved", label: "Resueltas" },
-          { key: "all", label: "Todas" },
-        ] as const).map((tab) => (
+        {isAdmin && (
           <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              filter === tab.key
-                ? "bg-blue-600 text-white"
-                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-            }`}
+            onClick={handleResolveAll}
+            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
           >
-            {tab.label}
+            Resolver Todas
           </button>
-        ))}
-      </div>
-
-      {/* Alerts list */}
-      <div className="space-y-3">
-        {filteredAlerts.length === 0 ? (
-          <div className="rounded-lg border border-neutral-200 bg-white p-12 text-center">
-            <p className="text-sm text-neutral-400">
-              {filter === "pending"
-                ? "No hay alertas pendientes"
-                : "No hay alertas registradas"}
-            </p>
-          </div>
-        ) : (
-          filteredAlerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={`flex items-start justify-between rounded-lg border p-4 ${
-                alert.resuelta
-                  ? "border-neutral-200 bg-neutral-50"
-                  : "border-amber-200 bg-amber-50"
-              }`}
-            >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      alert.tipo === "critica"
-                        ? "bg-red-100 text-red-700"
-                        : alert.tipo === "alerta"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-blue-100 text-blue-700"
-                    }`}
-                  >
-                    {alert.tipo}
-                  </span>
-                  {!alert.resuelta && (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                      Pendiente
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm font-medium text-neutral-900">
-                  {alert.descripcion}
-                </p>
-                <p className="text-xs text-neutral-500">
-                  {alert.pacienteNombre} — {alert.fechaGenerada}
-                </p>
-              </div>
-
-              {!alert.resuelta && (
-                <button
-                  onClick={() => handleResolve(alert.id)}
-                  className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
-                >
-                  Resolver
-                </button>
-              )}
-            </div>
-          ))
         )}
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-700">{error}</p>
+          <button onClick={clearError} className="text-sm text-red-500 hover:text-red-700">
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <select
+          value={filters.tipo}
+          onChange={(e) => setFilter({ tipo: e.target.value as TipoAlerta | "" })}
+          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos los tipos</option>
+          <option value="HEMOGLOBINA_CRITICA">Hb Crítica</option>
+          <option value="CONTROL_VENCIDO">Control Vencido</option>
+          <option value="TRATAMIENTO_VENCIDO">Tratamiento Vencido</option>
+        </select>
+        <select
+          value={filters.resuelta === null ? "" : filters.resuelta ? "resuelta" : "pendiente"}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "") setFilter({ resuelta: null });
+            else if (val === "pendiente") setFilter({ resuelta: false });
+            else setFilter({ resuelta: true });
+          }}
+          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="resuelta">Resueltas</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
+        <table className="min-w-full divide-y divide-neutral-200">
+          <thead className="bg-neutral-50">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500"
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y divide-neutral-200">
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-16 text-center">
+                  <div className="flex items-center justify-center gap-2 text-neutral-400">
+                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <span className="text-sm">Cargando alertas...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : alertas.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-16 text-center">
+                  <p className="text-sm text-neutral-400">
+                    {filters.resuelta === false ? "No hay alertas pendientes" : "No hay alertas"}
+                  </p>
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-neutral-50">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="whitespace-nowrap px-4 py-3">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {total > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-neutral-500">
+            Mostrando {from}-{to} de {total} alertas
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(page - 1)}
+              disabled={page <= 1}
+              className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages}
+              className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

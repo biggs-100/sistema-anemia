@@ -175,6 +175,35 @@ impl BackupManager {
         Ok(())
     }
 
+    /// Finds a backup by its ID.
+    pub async fn find_backup_by_id(&self, id: i64) -> Result<Option<BackupHistory>, AppError> {
+        let row = sqlx::query_as::<_, BackupRow>(
+            "SELECT id, nombre_archivo, tamaño_mb, fecha_generacion, resultado, checksum \
+             FROM backup_history WHERE id = ?1",
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| AppError::Database(format!("Failed to find backup by id: {e}")))?;
+
+        Ok(row.map(BackupRow::into_model))
+    }
+
+    /// Restores a backup by database ID (resolves the file path internally).
+    pub async fn restore_backup_by_id(&self, id: i64) -> Result<(), AppError> {
+        let backup = self
+            .find_backup_by_id(id)
+            .await?
+            .ok_or_else(|| AppError::NotFound(format!("Backup {id} not found")))?;
+
+        let backup_path = self.backups_dir.join(&backup.nombre_archivo);
+        let path_str = backup_path
+            .to_str()
+            .ok_or_else(|| AppError::Backup("Invalid backup path".to_string()))?;
+
+        self.restore_backup(path_str).await
+    }
+
     async fn find_backup_by_filename(&self, filename: &str) -> Result<Option<BackupHistory>, AppError> {
         let row = sqlx::query_as::<_, BackupRow>(
             "SELECT id, nombre_archivo, tamaño_mb, fecha_generacion, resultado, checksum \
