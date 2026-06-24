@@ -58,23 +58,26 @@ export default function ReportsPage() {
     setMessage(null);
 
     try {
-      if (format === "PDF") {
-        await invoke(API_COMMANDS.GENERATE_PDF, { token, pacienteId: 0 });
-      } else if (format === "Excel") {
-        await invoke(API_COMMANDS.GENERATE_EXCEL, {
+      if (format === "CSV") {
+        // C3: CSV works with backend's generate_csv(reportId) command
+        const path = await invoke<string>(API_COMMANDS.GENERATE_CSV, {
           token,
-          fechaInicio: "",
-          fechaFin: "",
+          tipo: reportId,
         });
-      } else {
-        // CSV not yet implemented in backend
-        throw new Error("Formato CSV próximamente");
+        setMessage(`Reporte CSV generado: ${path.split('/').pop() || path.split('\\').pop()}`);
+        setMessageType("success");
+      } else if (format === "PDF") {
+        // PDF needs a specific patient ID — show guidance
+        setMessage(`Seleccione un paciente desde su ficha clínica para generar un PDF individual.`);
+        setMessageType("info");
+      } else if (format === "Excel") {
+        // Excel needs a date range — show guidance
+        setMessage(`Use la opción CSV para exportar datos, o seleccione un rango de fechas en la sección de reportes avanzados.`);
+        setMessageType("info");
       }
-      setMessage(`Reporte generado exitosamente en formato ${format}`);
-      setMessageType("success");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al generar reporte";
-      if (msg.includes("not yet implemented") || msg.includes("no implementada")) {
+      if (msg.includes("not yet implemented") || msg.includes("no implementada") || msg.includes("próximamente")) {
         setMessage(`La generación de reportes estará disponible próximamente.`);
         setMessageType("info");
       } else {

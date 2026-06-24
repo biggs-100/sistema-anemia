@@ -30,10 +30,14 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
 
 const router = createBrowserRouter([
   {
+    // C1: Login outside AppLayout — no sidebar/header visible
+    path: "login",
+    element: <SuspenseWrapper><LoginPage /></SuspenseWrapper>,
+  },
+  {
     element: <AppLayout />,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: "login", element: <SuspenseWrapper><LoginPage /></SuspenseWrapper> },
       {
         element: <AuthGuard />,
         children: [

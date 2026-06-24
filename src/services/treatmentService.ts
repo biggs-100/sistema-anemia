@@ -16,7 +16,7 @@ export const treatmentService = {
   async create(token: string, dto: CreateTreatmentDTO): Promise<Treatment> {
     const res = await invoke<ApiResponse<Treatment>>(
       API_COMMANDS.CREATE_TREATMENT,
-      { token, ...dto },
+      { token, dto },
     );
     if (!res.success) throw new Error(res.message);
     return res.data!;

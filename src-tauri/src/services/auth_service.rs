@@ -170,6 +170,10 @@ impl AuthService {
 
     /// Validates a token AND checks that the user has one of the required roles.
     ///
+    /// Fetches the user from the database on every call to ensure:
+    /// - Role changes take effect immediately (B1 fix)
+    /// - Deactivated users are rejected (B2 fix)
+    ///
     /// Returns `UserResponse` with role name on success.
     pub async fn require_role(
         &self,
@@ -178,14 +182,31 @@ impl AuthService {
     ) -> Result<UserResponse, AppError> {
         let session = self.validate_token(token).await?;
 
-        if !roles.contains(&session.rol_id) {
+        // Fetch LIVE user data from DB — don't trust session cache
+        let user = self
+            .user_repo
+            .find_by_id(session.user_id)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Usuario no encontrado".to_string()))?;
+
+        // B2: Reject deactivated users
+        if !user.activo {
+            // Remove their session so they can't keep trying
+            self.sessions.write().await.remove(token);
+            return Err(AppError::Unauthorized(
+                "Usuario desactivado — contacte al administrador".to_string(),
+            ));
+        }
+
+        // B1: Check ROLE from DB (not session.rol_id which may be stale)
+        if !roles.contains(&user.rol_id) {
             // Log unauthorized access attempt
             self.audit
                 .log_event(
-                    Some(session.user_id),
+                    Some(user.id),
                     "UNAUTHORIZED_ACCESS",
                     "users",
-                    Some(session.user_id),
+                    Some(user.id),
                     None,
                     None,
                     None,
@@ -195,12 +216,6 @@ impl AuthService {
                 "No tiene permisos para realizar esta acción".to_string(),
             ));
         }
-
-        let user = self
-            .user_repo
-            .find_by_id(session.user_id)
-            .await?
-            .ok_or_else(|| AppError::NotFound("Usuario no encontrado".to_string()))?;
 
         let rol_nombre = self.get_role_name(user.rol_id).await?;
 
@@ -240,11 +255,14 @@ impl AuthService {
         let new_hash = security::hash_password(new_password)?;
         self.user_repo.update_password(user_id, &new_hash).await?;
 
+        // B3: Invalidate ALL existing sessions for this user
+        self.sessions.write().await.retain(|_, s| s.user_id != user_id);
+
         self.audit
             .log_event(Some(user_id), "CHANGE_PASSWORD", "users", Some(user_id), None, None, None)
             .await?;
 
-        tracing::info!("Password changed for user {user_id}");
+        tracing::info!("Password changed for user {user_id} — all existing sessions invalidated");
         Ok(())
     }
 

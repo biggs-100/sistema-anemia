@@ -2,6 +2,29 @@ import { create } from "zustand";
 import type { User } from "@/types/user";
 import { authService } from "@/services/authService";
 
+// C2: Persist token across app restarts via localStorage
+const TOKEN_STORAGE_KEY = "sistema_anemia_token";
+
+function loadStoredToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveToken(token: string | null) {
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // localStorage unavailable — in-memory only
+  }
+}
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -18,7 +41,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: null,
+  token: loadStoredToken(),
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -27,6 +50,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await authService.login(usuario, password);
+      saveToken(response.token);
       set({
         user: response.user,
         token: response.token,
@@ -50,6 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // Clear local state even if API call fails
     } finally {
+      saveToken(null);
       set({ user: null, token: null, isAuthenticated: false });
     }
   },
@@ -57,14 +82,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkSession: async () => {
     const { token } = get();
     if (!token) {
-      set({ isAuthenticated: false, user: null });
+      set({ isAuthenticated: false, user: null, isLoading: false });
       return;
     }
     set({ isLoading: true });
     try {
+      // Validate the stored token against the backend
       const user = await authService.currentUser(token);
       set({ user, isAuthenticated: true, isLoading: false });
     } catch {
+      // Token expired or invalid — clear everything
+      saveToken(null);
       set({ user: null, token: null, isAuthenticated: false, isLoading: false });
     }
   },

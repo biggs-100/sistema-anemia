@@ -223,7 +223,7 @@ async fn seed_admin(pool: &sqlx::SqlitePool) -> Result<(), Box<dyn std::error::E
         .execute(pool)
         .await?;
 
-        tracing::info!("Initial admin user created: admin / admin123");
+        tracing::info!("Initial admin user created with default credentials — change password on first login");
     } else {
         tracing::debug!("Users already exist, skipping admin seed");
     }

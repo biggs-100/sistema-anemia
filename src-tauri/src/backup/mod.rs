@@ -85,6 +85,9 @@ impl BackupManager {
     }
 
     /// Restores the database from a backup file.
+    ///
+    /// B5 fix: Checkpoints WAL before restore to ensure data consistency,
+    /// and warns the user to restart the app afterward.
     pub async fn restore_backup(&self, backup_path: &str) -> Result<(), AppError> {
         let path = Path::new(backup_path);
 
@@ -111,6 +114,12 @@ impl BackupManager {
             }
         }
 
+        // B5: Checkpoint WAL to flush pending transactions to the main DB file
+        sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
+            .execute(&self.pool)
+            .await
+            .map_err(|e| AppError::Backup(format!("Failed to checkpoint WAL: {e}")))?;
+
         // Create a snapshot of current DB before restoring
         let snapshot_path = self.db_path.with_extension("db.snapshot");
         if self.db_path.exists() {
@@ -119,13 +128,15 @@ impl BackupManager {
                 .map_err(|e| AppError::Backup(format!("Failed to create snapshot: {e}")))?;
         }
 
-        // Close pool connections by draining, then copy backup over DB
-        // For SQLite, we just copy over the file
+        // Copy backup over the live DB file
         tokio::fs::copy(path, &self.db_path)
             .await
             .map_err(|e| AppError::Backup(format!("Failed to restore backup: {e}")))?;
 
-        tracing::info!("Database restored from: {backup_path}");
+        tracing::warn!(
+            "Database restored from: {backup_path}. \
+             Active connections may have stale data — restart the application."
+        );
         Ok(())
     }
 
