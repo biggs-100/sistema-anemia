@@ -1,19 +1,18 @@
-export type HemoglobinaClasificacion = "normal" | "leve" | "moderada" | "severa";
+export type ClasificacionAnemia = "normal" | "leve" | "moderada" | "severa";
 
 export interface Control {
   id: number;
   pacienteId: number;
   fechaControl: string;
+  edadMeses: number | null;
   peso: number;
   talla: number;
   hemoglobina: number;
-  hemoglobinaClasificacion: HemoglobinaClasificacion;
-  temperatura?: number;
-  dosisHierro?: string;
-  observaciones?: string;
-  usuarioId?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  clasificacion: ClasificacionAnemia;
+  temperatura: number | null;
+  observaciones: string | null;
+  usuarioId: number;
+  creadoEn: string;
 }
 
 export interface CreateControlDTO {
@@ -23,16 +22,15 @@ export interface CreateControlDTO {
   talla: number;
   hemoglobina: number;
   temperatura?: number;
-  dosisHierro?: string;
   observaciones?: string;
-  usuarioId?: number;
 }
 
 export interface UpdateControlDTO {
+  id: number;
+  fechaControl?: string;
   peso?: number;
   talla?: number;
   hemoglobina?: number;
   temperatura?: number;
-  dosisHierro?: string;
   observaciones?: string;
 }

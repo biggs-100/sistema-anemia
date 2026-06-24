@@ -5,6 +5,7 @@ export const ROUTES = {
   PATIENT_NEW: "/patients/new",
   PATIENT_DETAIL: "/patients/:id",
   PATIENT_EDIT: "/patients/:id/edit",
+  PATIENT_CONTROLS: (id: number) => `/patients/${id}?tab=controles`,
   CONTROLS: "/controls",
   TREATMENTS: "/treatments",
   REPORTS: "/reports",
@@ -32,6 +33,7 @@ export const API_COMMANDS = {
   CREATE_CONTROL: "create_control",
   UPDATE_CONTROL: "update_control",
   GET_CONTROLS: "get_controls",
+  GET_CONTROLS_BY_DATE_RANGE: "get_controls_by_date_range",
 
   // Treatments
   CREATE_TREATMENT: "create_treatment",
@@ -56,6 +58,9 @@ export const API_COMMANDS = {
 
 export const ANEMIA_THRESHOLDS = {
   /** Hemoglobin g/dL thresholds for anemia classification */
+  NORMAL: 11.0,
+  LEVE: 10.0,
+  MODERADA: 7.0,
   NORMAL_MIN: 11.0,
   LEVE_MIN: 10.0,
   MODERADA_MIN: 7.0,

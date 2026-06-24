@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePatientDetail } from "@/hooks/usePatients";
+import { useControls } from "@/hooks/useControls";
 import { ROUTES, SEXO_LABELS } from "@/utils/constants";
+import ControlTable from "@/features/controls/components/ControlTable";
+import HbEvolutionChart from "@/features/controls/components/HbEvolutionChart";
+import ControlForm from "@/features/controls/components/ControlForm";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -66,6 +70,17 @@ export default function PatientDetailPage() {
   const patientId = id ? Number(id) : 0;
   const { patient, loading, error, loadPatient, clearError } = usePatientDetail(patientId);
   const [activeTab, setActiveTab] = useState<TabId>("datos");
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Load controls for the Controles tab
+  const {
+    controls,
+    total,
+    page,
+    pageSize,
+    loading: controlsLoading,
+    setPage,
+  } = useControls(activeTab === "controles" ? patientId : 0);
 
   // Loading state
   if (loading) {
@@ -227,16 +242,29 @@ export default function PatientDetailPage() {
         )}
 
         {activeTab === "controles" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-neutral-900">Controles</h3>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                + Nuevo Control
+              </button>
             </div>
-            <div className="rounded-lg border-2 border-dashed border-neutral-200 p-8 text-center">
-              <p className="text-sm text-neutral-400">Historial de controles — próximamente</p>
-              <p className="mt-1 text-xs text-neutral-300">
-                Esta sección mostrará el historial de controles del paciente
-              </p>
-            </div>
+
+            {/* Control table */}
+            <ControlTable
+              controls={controls}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              loading={controlsLoading}
+              onPageChange={setPage}
+            />
+
+            {/* Hb Evolution Chart */}
+            <HbEvolutionChart controls={controls} />
           </div>
         )}
 
@@ -264,6 +292,16 @@ export default function PatientDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Control Form Modal */}
+      <ControlForm
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        pacienteId={patientId}
+        onSuccess={() => {
+          // Control was created — table will auto-refresh via useControls
+        }}
+      />
     </div>
   );
 }

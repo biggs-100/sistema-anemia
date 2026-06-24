@@ -14,7 +14,7 @@ export type {
   Control,
   CreateControlDTO,
   UpdateControlDTO,
-  HemoglobinaClasificacion,
+  ClasificacionAnemia,
 } from "./control";
 
 export type {
