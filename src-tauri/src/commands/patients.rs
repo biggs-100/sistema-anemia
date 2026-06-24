@@ -2,7 +2,7 @@ use tauri::AppHandle;
 use tauri::State;
 use tauri::Manager;
 
-use crate::dto::{ApiResponse, CreatePatientDTO, UpdatePatientDTO};
+use crate::dto::{ApiResponse, CreatePatientDTO, PatientResponse, SearchResult, UpdatePatientDTO};
 use crate::models::Patient;
 use crate::services::auth_service::{CLINICAL_ROLES, ALL_ROLES};
 use crate::AppState;
@@ -53,7 +53,7 @@ pub async fn get_patient(
     app: AppHandle,
     token: String,
     id: i64,
-) -> Result<ApiResponse<Patient>, String> {
+) -> Result<ApiResponse<PatientResponse>, String> {
     let state: State<AppState> = app.state();
     let _user = state
         .auth_service
@@ -73,7 +73,9 @@ pub async fn search_patients(
     app: AppHandle,
     token: String,
     query: String,
-) -> Result<ApiResponse<Vec<Patient>>, String> {
+    page: Option<i64>,
+    page_size: Option<i64>,
+) -> Result<ApiResponse<SearchResult<PatientResponse>>, String> {
     let state: State<AppState> = app.state();
     let _user = state
         .auth_service
@@ -83,7 +85,7 @@ pub async fn search_patients(
 
     state
         .patient_service
-        .search(&query)
+        .search(&query, page.unwrap_or(1), page_size.unwrap_or(20))
         .await
         .map_err(|e| e.to_string())
 }

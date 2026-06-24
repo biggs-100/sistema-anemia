@@ -16,11 +16,12 @@ use tauri::Manager;
 use audit::AuditService;
 use backup::BackupManager;
 use repositories::{
-    SqliteControlRepository, SqlitePatientRepository, SqliteTreatmentRepository,
-    SqliteUserRepository,
+    SqliteCentroPobladoRepository, SqliteControlRepository, SqlitePatientRepository,
+    SqliteTreatmentRepository, SqliteUserRepository,
 };
 use services::{
-    AuthService, BackupService, ControlService, PatientService, TreatmentService,
+    AuthService, BackupService, CentroPobladoService, ControlService, PatientService,
+    TreatmentService,
 };
 
 pub struct AppState {
@@ -28,6 +29,7 @@ pub struct AppState {
     pub audit_service: AuditService,
     pub auth_service: Arc<AuthService>,
     pub patient_service: PatientService,
+    pub centro_poblado_service: CentroPobladoService,
     pub control_service: ControlService,
     pub treatment_service: TreatmentService,
     pub backup_service: BackupService,
@@ -67,6 +69,7 @@ pub fn run() {
             let control_repo = SqliteControlRepository::new(pool.clone());
             let treatment_repo = SqliteTreatmentRepository::new(pool.clone());
             let user_repo = SqliteUserRepository::new(pool.clone());
+            let centro_poblado_repo = SqliteCentroPobladoRepository::new(pool.clone());
 
             // --- Services ---
             let audit_service = AuditService::new(pool.clone());
@@ -78,7 +81,12 @@ pub fn run() {
 
             let patient_service = PatientService::new(
                 Box::new(patient_repo),
+                Box::new(centro_poblado_repo),
                 AuditService::new(pool.clone()),
+            );
+
+            let centro_poblado_service = CentroPobladoService::new(
+                Box::new(SqliteCentroPobladoRepository::new(pool.clone())),
             );
 
             let control_service = ControlService::new(
@@ -108,6 +116,7 @@ pub fn run() {
                 audit_service,
                 auth_service,
                 patient_service,
+                centro_poblado_service,
                 control_service,
                 treatment_service,
                 backup_service,
@@ -141,6 +150,7 @@ pub fn run() {
             commands::users::create_user,
             commands::users::update_user,
             commands::users::deactivate_user,
+            commands::centros_poblados::list_centros_poblados,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

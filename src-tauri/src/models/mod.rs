@@ -19,6 +19,7 @@ pub struct Patient {
     pub sexo: String,
     pub direccion: Option<String>,
     pub centro_poblado_id: Option<i64>,
+    pub centro_poblado_nombre: Option<String>,
     pub nombre_apoderado: Option<String>,
     pub celular_apoderado: Option<String>,
     pub fecha_registro: Option<String>,

@@ -90,6 +90,53 @@ pub struct UpdateUserDTO {
 }
 
 // ---------------------------------------------------------------------------
+// Response DTOs
+// ---------------------------------------------------------------------------
+
+/// Public-facing patient data with computed edad.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PatientResponse {
+    pub id: i64,
+    pub historia_clinica: String,
+    pub dni: String,
+    pub nombres: String,
+    pub apellido_paterno: String,
+    pub apellido_materno: String,
+    pub fecha_nacimiento: String,
+    pub sexo: String,
+    pub edad: String,
+    pub direccion: Option<String>,
+    pub centro_poblado_id: Option<i64>,
+    pub centro_poblado_nombre: Option<String>,
+    pub nombre_apoderado: Option<String>,
+    pub celular_apoderado: Option<String>,
+    pub fecha_registro: Option<String>,
+    pub activo: bool,
+}
+
+/// Public-facing centro poblado data.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CentroPobladoResponse {
+    pub id: i64,
+    pub nombre: String,
+    pub distrito: String,
+    pub provincia: String,
+    pub departamento: String,
+}
+
+/// Paginated search result wrapper.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchResult<T: Serialize> {
+    pub data: Vec<T>,
+    pub total: i64,
+    pub page: i64,
+    pub page_size: i64,
+}
+
+// ---------------------------------------------------------------------------
 // Generic API Response
 // ---------------------------------------------------------------------------
 
