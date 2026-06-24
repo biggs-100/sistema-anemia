@@ -1,9 +1,8 @@
 use tauri::AppHandle;
-use tauri::State;
 use tauri::Manager;
+use tauri::State;
 
 use crate::services::auth_service::ALL_ROLES;
-use crate::services::ReportService;
 use crate::AppState;
 
 #[tauri::command]
@@ -19,7 +18,9 @@ pub async fn generate_pdf(
         .await
         .map_err(|e| e.to_string())?;
 
-    ReportService::generate_pdf(paciente_id)
+    state
+        .report_service
+        .generate_pdf(paciente_id)
         .await
         .map_err(|e| e.to_string())
 }
@@ -38,7 +39,29 @@ pub async fn generate_excel(
         .await
         .map_err(|e| e.to_string())?;
 
-    ReportService::generate_excel(&fecha_inicio, &fecha_fin)
+    state
+        .report_service
+        .generate_excel(&fecha_inicio, &fecha_fin)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn generate_csv(
+    app: AppHandle,
+    token: String,
+    tipo: String,
+) -> Result<String, String> {
+    let state: State<AppState> = app.state();
+    let _user = state
+        .auth_service
+        .require_role(&token, ALL_ROLES)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    state
+        .report_service
+        .generate_csv(&tipo)
         .await
         .map_err(|e| e.to_string())
 }

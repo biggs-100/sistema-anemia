@@ -202,3 +202,189 @@ pub async fn get_dashboard_stats(
 
     Ok(ApiResponse::success(stats))
 }
+
+#[cfg(test)]
+mod tests {
+    use sqlx::SqlitePool;
+
+    async fn setup_test_pool() -> SqlitePool {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS centros_poblados (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, activo INTEGER NOT NULL DEFAULT 1
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS patients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, historia_clinica TEXT NOT NULL,
+                dni TEXT NOT NULL, nombres TEXT NOT NULL, apellido_paterno TEXT NOT NULL,
+                apellido_materno TEXT NOT NULL, fecha_nacimiento TEXT NOT NULL,
+                sexo TEXT NOT NULL, activo INTEGER NOT NULL DEFAULT 1
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS controles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, paciente_id INTEGER NOT NULL,
+                fecha_control TEXT NOT NULL, edad_meses INTEGER, peso REAL, talla REAL,
+                hemoglobina REAL, observaciones TEXT
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS tratamientos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, paciente_id INTEGER NOT NULL,
+                medicamento_id INTEGER NOT NULL, dosis TEXT, frecuencia TEXT,
+                fecha_inicio TEXT NOT NULL, estado TEXT NOT NULL DEFAULT 'activo'
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS alertas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, paciente_id INTEGER NOT NULL,
+                tipo TEXT NOT NULL, descripcion TEXT, resuelta INTEGER NOT NULL DEFAULT 0
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        pool
+    }
+
+    #[tokio::test]
+    async fn test_dashboard_queries_return_non_negative() {
+        let pool = setup_test_pool().await;
+
+        // Insert test data
+        sqlx::query(
+            "INSERT INTO patients (historia_clinica, dni, nombres, apellido_paterno, \
+             apellido_materno, fecha_nacimiento, sexo, activo) \
+             VALUES ('HC-D-01', '00000001', 'Dash', 'Board', 'Test', '2010-01-01', 'F', 1)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "INSERT INTO controles (paciente_id, fecha_control, hemoglobina) \
+             VALUES (1, strftime('%Y-%m-%d', 'now'), 10.5)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "INSERT INTO tratamientos (paciente_id, medicamento_id, fecha_inicio, estado) \
+             VALUES (1, 1, '2025-01-01', 'activo')",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "INSERT INTO alertas (paciente_id, tipo, descripcion, resuelta) \
+             VALUES (1, 'TEST', 'pending alert', 0)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        // Run the same query patterns as the dashboard command
+        let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM patients WHERE activo = 1")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert!(total >= 0, "total_pacientes should be non-negative");
+
+        let controles_mes: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM controles \
+             WHERE strftime('%Y-%m', fecha_control) = strftime('%Y-%m', 'now')",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert!(controles_mes >= 0, "controles_mes should be non-negative");
+
+        let tratamientos_activos: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM tratamientos WHERE estado = 'activo'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert!(
+            tratamientos_activos >= 0,
+            "tratamientos_activos should be non-negative"
+        );
+
+        let alertas_pendientes: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM alertas WHERE resuelta = 0",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert!(
+            alertas_pendientes >= 0,
+            "alertas_pendientes should be non-negative"
+        );
+
+        let casos_severos: i64 = sqlx::query_scalar(
+            "SELECT COUNT(DISTINCT paciente_id) FROM controles \
+             WHERE hemoglobina < 7.0 AND fecha_control >= date('now', '-3 months')",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert!(casos_severos >= 0, "casos_severos should be non-negative");
+
+        // Verify with actual data returns expected values
+        assert_eq!(total, 1, "Should have 1 active patient");
+        assert_eq!(controles_mes, 1, "Should have 1 control this month");
+        assert_eq!(tratamientos_activos, 1, "Should have 1 active treatment");
+        assert_eq!(alertas_pendientes, 1, "Should have 1 pending alert");
+        assert_eq!(casos_severos, 0, "Should have 0 severe cases (hb=10.5)");
+    }
+
+    #[tokio::test]
+    async fn test_dashboard_queries_empty_db() {
+        let pool = setup_test_pool().await;
+
+        // Empty database should return 0 for all counts, not errors
+        let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM patients WHERE activo = 1")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(total, 0);
+
+        let controles_mes: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM controles \
+             WHERE strftime('%Y-%m', fecha_control) = strftime('%Y-%m', 'now')",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(controles_mes, 0);
+
+        let alertas_pendientes: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM alertas WHERE resuelta = 0",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(alertas_pendientes, 0);
+    }
+}

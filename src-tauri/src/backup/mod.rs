@@ -7,6 +7,7 @@ use crate::errors::AppError;
 use crate::models::BackupHistory;
 
 /// Backup manager for creating and restoring database backups with retention policy.
+#[derive(Clone)]
 pub struct BackupManager {
     pool: SqlitePool,
     backups_dir: PathBuf,
@@ -252,5 +253,112 @@ impl BackupRow {
             resultado: self.resultado,
             checksum: self.checksum,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    static TEST_COUNTER: AtomicU32 = AtomicU32::new(0);
+
+    async fn setup_test_env() -> (SqlitePool, PathBuf, PathBuf) {
+        let id = TEST_COUNTER.fetch_add(1, Ordering::SeqCst);
+        let tmp = std::env::temp_dir().join(format!("anemia_backup_test_{}_{}", std::process::id(), id));
+        let _ = fs::remove_dir_all(&tmp);
+        fs::create_dir_all(&tmp).unwrap();
+
+        let db_path = tmp.join("test.db");
+        let backups_dir = tmp.join("backups");
+
+        // Create a real SQLite database file
+        let pool = SqlitePool::connect(&format!("sqlite:///{}?mode=rwc", db_path.to_string_lossy().replace('\\', "/")))
+            .await
+            .unwrap();
+
+        // Create required tables
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS backup_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre_archivo TEXT NOT NULL,
+                tamaño_mb REAL NOT NULL,
+                fecha_generacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                resultado TEXT NOT NULL,
+                checksum TEXT
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        // Also create a minimal table to have real data
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS test_data (id INTEGER PRIMARY KEY, value TEXT)"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query("INSERT INTO test_data (value) VALUES ('test')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        // Close pool connections so the file can be copied
+        pool.close().await;
+
+        // Re-open with a new pool
+        let pool2 = SqlitePool::connect(&format!("sqlite:///{}?mode=rwc", db_path.to_string_lossy().replace('\\', "/")))
+            .await
+            .unwrap();
+
+        (pool2, db_path, backups_dir)
+    }
+
+    #[tokio::test]
+    async fn test_create_backup_creates_file() {
+        let (pool, db_path, backups_dir) = setup_test_env().await;
+        let manager = BackupManager::new(pool.clone(), backups_dir.clone(), db_path.clone());
+
+        let backup = manager.create_backup().await.unwrap();
+
+        // Verify backup file exists
+        let backup_file = backups_dir.join(&backup.nombre_archivo);
+        assert!(backup_file.exists(), "Backup file should exist");
+        assert!(backup.tamaño_mb > 0.0, "Backup size should be > 0");
+        assert!(backup.checksum.is_some(), "Backup should have checksum");
+        assert_eq!(backup.resultado, "exitoso");
+
+        // Cleanup
+        let _ = fs::remove_dir_all(backups_dir.parent().unwrap());
+        pool.close().await;
+    }
+
+    #[tokio::test]
+    async fn test_create_backup_records_in_db() {
+        let (pool, db_path, backups_dir) = setup_test_env().await;
+        let manager = BackupManager::new(pool.clone(), backups_dir.clone(), db_path.clone());
+
+        let backup = manager.create_backup().await.unwrap();
+
+        // Verify backup is recorded in backup_history
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM backup_history")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(count, 1, "Should have 1 backup record");
+
+        // Verify ID matches
+        let recorded: i64 = sqlx::query_scalar("SELECT id FROM backup_history LIMIT 1")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(recorded, backup.id);
+
+        // Cleanup
+        let _ = fs::remove_dir_all(backups_dir.parent().unwrap());
+        pool.close().await;
     }
 }

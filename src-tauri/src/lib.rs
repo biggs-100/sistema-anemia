@@ -21,7 +21,7 @@ use repositories::{
 };
 use services::{
     AuthService, BackupService, CentroPobladoService, ControlService, PatientService,
-    TreatmentService,
+    ReportService, TreatmentService,
 };
 
 pub struct AppState {
@@ -33,6 +33,7 @@ pub struct AppState {
     pub control_service: ControlService,
     pub treatment_service: TreatmentService,
     pub backup_service: BackupService,
+    pub report_service: ReportService,
     pub user_repo: Box<dyn repositories::UserRepository>,
 }
 
@@ -101,7 +102,43 @@ pub fn run() {
                 pool.clone(),
             );
 
+            let backup_mgr_for_scheduler = backup_manager.clone();
             let backup_service = BackupService::new(backup_manager);
+
+            // --- ReportService ---
+            let exports_dir = resolve_exports_dir();
+            let report_service = ReportService::new(pool.clone(), exports_dir);
+
+            // --- Daily backup scheduler (22:00) ---
+            use chrono::Timelike;
+            tokio::spawn(async move {
+                loop {
+                    let now = chrono::Local::now();
+                    let next_run = if now.hour() >= 22 {
+                        (chrono::Local::now().date_naive() + chrono::TimeDelta::days(1))
+                            .and_hms_opt(22, 0, 0)
+                            .unwrap()
+                            .and_local_timezone(chrono::Local)
+                            .unwrap()
+                    } else {
+                        now.date_naive()
+                            .and_hms_opt(22, 0, 0)
+                            .unwrap()
+                            .and_local_timezone(chrono::Local)
+                            .unwrap()
+                    };
+                    let duration = next_run - now;
+                    let seconds = duration.num_seconds().max(0) as u64;
+                    tracing::info!("Next auto-backup in {}s (22:00)", seconds);
+                    tokio::time::sleep(tokio::time::Duration::from_secs(seconds)).await;
+                    tracing::info!("Running scheduled daily backup...");
+                    if let Err(e) = backup_mgr_for_scheduler.create_backup().await {
+                        tracing::error!("Scheduled backup failed: {e}");
+                    } else {
+                        tracing::info!("Scheduled backup completed");
+                    }
+                }
+            });
 
             // AuthService with Arc for shared ownership across commands + scavenger
             let auth_service = Arc::new(AuthService::new(
@@ -122,6 +159,7 @@ pub fn run() {
                 control_service,
                 treatment_service,
                 backup_service,
+                report_service,
                 user_repo: Box::new(user_repo),
             });
 
@@ -152,6 +190,7 @@ pub fn run() {
             commands::medicamentos::list_medicamentos,
             commands::reports::generate_pdf,
             commands::reports::generate_excel,
+            commands::reports::generate_csv,
             commands::backups::create_backup,
             commands::backups::restore_backup,
             commands::backups::list_backups,
@@ -202,5 +241,12 @@ fn resolve_backups_dir() -> PathBuf {
     let mut path = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
     path.pop();
     path.push("backups");
+    path
+}
+
+fn resolve_exports_dir() -> PathBuf {
+    let mut path = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
+    path.pop();
+    path.push("exports");
     path
 }

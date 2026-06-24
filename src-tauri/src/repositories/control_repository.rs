@@ -248,3 +248,164 @@ impl ControlRow {
 fn db_error(context: &str, err: sqlx::Error) -> AppError {
     AppError::Database(format!("{context}: {err}"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dto::CreateControlDTO;
+
+    async fn setup_test_pool() -> SqlitePool {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS centros_poblados (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL,
+                activo INTEGER NOT NULL DEFAULT 1
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS patients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                historia_clinica TEXT NOT NULL,
+                dni TEXT NOT NULL,
+                nombres TEXT NOT NULL,
+                apellido_paterno TEXT NOT NULL,
+                apellido_materno TEXT NOT NULL,
+                fecha_nacimiento TEXT NOT NULL,
+                sexo TEXT NOT NULL,
+                activo INTEGER NOT NULL DEFAULT 1
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS controles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                paciente_id INTEGER NOT NULL,
+                fecha_control TEXT NOT NULL,
+                edad_meses INTEGER,
+                peso REAL,
+                talla REAL,
+                hemoglobina REAL,
+                temperatura REAL,
+                observaciones TEXT,
+                usuario_id INTEGER,
+                creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        // Insert a patient
+        sqlx::query(
+            "INSERT INTO patients (historia_clinica, dni, nombres, apellido_paterno, \
+             apellido_materno, fecha_nacimiento, sexo, activo) \
+             VALUES ('HC-0001', '12345678', 'Test', 'Paciente', 'Uno', '2010-01-15', 'M', 1)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        pool
+    }
+
+    async fn insert_controls(pool: &SqlitePool, paciente_id: i64, count: i64) {
+        for i in 0..count {
+            let fecha = format!("2025-01-{:02}", (i % 31) + 1);
+            let hb = 8.0 + (i as f64 * 0.5) % 8.0;
+            sqlx::query(
+                "INSERT INTO controles (paciente_id, fecha_control, peso, talla, hemoglobina, observaciones) \
+                 VALUES (?1, ?2, 12.5, 85.0, ?3, 'test control')",
+            )
+            .bind(paciente_id)
+            .bind(&fecha)
+            .bind(hb)
+            .execute(pool)
+            .await
+            .unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn test_control_create() {
+        let pool = setup_test_pool().await;
+        let repo = SqliteControlRepository::new(pool.clone());
+
+        let dto = CreateControlDTO {
+            paciente_id: 1,
+            fecha_control: "2025-06-15".to_string(),
+            edad_meses: Some(60),
+            peso: Some(14.5),
+            talla: Some(95.0),
+            hemoglobina: Some(11.5),
+            temperatura: Some(36.5),
+            observaciones: Some("Control de rutina".to_string()),
+            usuario_id: Some(1),
+        };
+
+        let control = repo.create(&dto).await.unwrap();
+        assert!(control.id > 0);
+        assert_eq!(control.paciente_id, 1);
+        assert_eq!(control.hemoglobina, Some(11.5));
+        assert_eq!(control.peso, Some(14.5));
+    }
+
+    #[tokio::test]
+    async fn test_find_by_paciente() {
+        let pool = setup_test_pool().await;
+        let repo = SqliteControlRepository::new(pool.clone());
+
+        insert_controls(&pool, 1, 10).await;
+
+        let controls = repo.find_by_paciente(1).await.unwrap();
+        assert_eq!(controls.len(), 10);
+    }
+
+    #[tokio::test]
+    async fn test_pagination_page_1_returns_20() {
+        let pool = setup_test_pool().await;
+        let repo = SqliteControlRepository::new(pool.clone());
+
+        insert_controls(&pool, 1, 25).await;
+
+        let page1 = repo.find_by_paciente_paginated(1, 1, 20).await.unwrap();
+        assert_eq!(page1.len(), 20, "Page 1 should return 20 controls");
+    }
+
+    #[tokio::test]
+    async fn test_pagination_page_2_returns_remaining() {
+        let pool = setup_test_pool().await;
+        let repo = SqliteControlRepository::new(pool.clone());
+
+        insert_controls(&pool, 1, 25).await;
+
+        let page2 = repo.find_by_paciente_paginated(1, 2, 20).await.unwrap();
+        assert_eq!(page2.len(), 5, "Page 2 should return remaining 5 controls");
+    }
+
+    #[tokio::test]
+    async fn test_pagination_returns_different_patients() {
+        let pool = setup_test_pool().await;
+        let repo = SqliteControlRepository::new(pool.clone());
+
+        insert_controls(&pool, 1, 25).await;
+
+        let page1 = repo.find_by_paciente_paginated(1, 1, 20).await.unwrap();
+        let page2 = repo.find_by_paciente_paginated(1, 2, 20).await.unwrap();
+
+        // Verify no overlap between pages
+        let ids1: Vec<i64> = page1.iter().map(|c| c.id).collect();
+        let ids2: Vec<i64> = page2.iter().map(|c| c.id).collect();
+        for id in &ids2 {
+            assert!(!ids1.contains(id), "Page 2 should not contain Page 1 IDs");
+        }
+    }
+}

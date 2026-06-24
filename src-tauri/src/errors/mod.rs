@@ -37,3 +37,9 @@ impl From<AppError> for String {
         err.to_string()
     }
 }
+
+impl From<rust_xlsxwriter::XlsxError> for AppError {
+    fn from(err: rust_xlsxwriter::XlsxError) -> Self {
+        AppError::Internal(format!("XLSX error: {err}"))
+    }
+}
