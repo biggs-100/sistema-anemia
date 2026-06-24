@@ -1,10 +1,13 @@
+// App.tsx is used as the root layout element by app/router.tsx
+// It renders AppLayout with an Outlet for nested routes.
+import { Outlet } from "react-router-dom";
+import AppLayout from "@/components/layout/AppLayout";
+
 function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-100">
-      <h1 className="text-2xl font-bold text-neutral-800">
-        Sistema de Seguimiento de Niños Tratados por Anemia
-      </h1>
-    </main>
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
   );
 }
 
