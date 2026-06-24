@@ -10,6 +10,7 @@ mod security;
 mod errors;
 
 use std::path::PathBuf;
+use std::sync::Arc;
 use tauri::Manager;
 
 use audit::AuditService;
@@ -25,7 +26,7 @@ use services::{
 pub struct AppState {
     pub pool: sqlx::SqlitePool,
     pub audit_service: AuditService,
-    pub auth_service: AuthService,
+    pub auth_service: Arc<AuthService>,
     pub patient_service: PatientService,
     pub control_service: ControlService,
     pub treatment_service: TreatmentService,
@@ -53,6 +54,9 @@ pub fn run() {
             let pool = handle.block_on(database::init_db())?;
             handle.block_on(database::run_migrations(&pool))?;
 
+            // --- Admin seed: create default admin if DB is empty ---
+            handle.block_on(seed_admin(&pool))?;
+
             // --- Resolve data directories ---
             let data_dir = resolve_data_dir();
             let db_path = data_dir.join("anemia.db");
@@ -72,11 +76,6 @@ pub fn run() {
                 db_path,
             );
 
-            let auth_service = AuthService::new(
-                Box::new(SqliteUserRepository::new(pool.clone())),
-                AuditService::new(pool.clone()),
-            );
-
             let patient_service = PatientService::new(
                 Box::new(patient_repo),
                 AuditService::new(pool.clone()),
@@ -93,6 +92,15 @@ pub fn run() {
             );
 
             let backup_service = BackupService::new(backup_manager);
+
+            // AuthService with Arc for shared ownership across commands + scavenger
+            let auth_service = Arc::new(AuthService::new(
+                Arc::new(SqliteUserRepository::new(pool.clone())),
+                pool.clone(),
+            ));
+
+            // Start the background session scavenger
+            auth_service.start_scavenger();
 
             // --- AppState ---
             app.manage(AppState {
@@ -112,6 +120,7 @@ pub fn run() {
             commands::auth::login,
             commands::auth::logout,
             commands::auth::current_user,
+            commands::auth::change_password,
             commands::patients::create_patient,
             commands::patients::update_patient,
             commands::patients::get_patient,
@@ -135,6 +144,31 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Seeds the default admin user if no users exist in the database.
+async fn seed_admin(pool: &sqlx::SqlitePool) -> Result<(), Box<dyn std::error::Error>> {
+    let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users")
+        .fetch_one(pool)
+        .await?;
+
+    if count.0 == 0 {
+        let hash = crate::security::hash_password("admin123")
+            .map_err(|e| format!("Password hashing failed: {e}"))?;
+
+        sqlx::query(
+            "INSERT INTO users (usuario, password_hash, nombres, apellidos, rol_id) \
+             VALUES ('admin', ?, 'Administrador', 'Sistema', 1)",
+        )
+        .bind(&hash)
+        .execute(pool)
+        .await?;
+
+        tracing::info!("Initial admin user created: admin / admin123");
+    } else {
+        tracing::debug!("Users already exist, skipping admin seed");
+    }
+    Ok(())
 }
 
 fn resolve_data_dir() -> PathBuf {

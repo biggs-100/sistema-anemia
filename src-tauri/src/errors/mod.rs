@@ -8,8 +8,8 @@ pub enum AppError {
     #[error("Not found: {0}")]
     NotFound(String),
 
-    #[error("Unauthorized")]
-    Unauthorized,
+    #[error("{0}")]
+    Unauthorized(String),
 
     #[error("Database error: {0}")]
     Database(String),

@@ -78,6 +78,19 @@ pub struct Role {
     pub nombre: String,
 }
 
+/// Public-facing user response without password_hash.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserResponse {
+    pub id: i64,
+    pub usuario: String,
+    pub nombres: String,
+    pub apellidos: String,
+    pub rol_id: i64,
+    pub rol_nombre: String,
+    pub activo: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CentroPoblado {

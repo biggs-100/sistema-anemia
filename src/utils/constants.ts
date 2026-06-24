@@ -17,6 +17,7 @@ export const API_COMMANDS = {
   LOGIN: "login",
   LOGOUT: "logout",
   CURRENT_USER: "current_user",
+  CHANGE_PASSWORD: "change_password",
 
   // Patients
   CREATE_PATIENT: "create_patient",

@@ -1,21 +1,23 @@
 import { NavLink } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/utils/constants";
 
 interface NavItem {
   path: string;
   label: string;
   icon: string;
+  minRole: number; // 1=Admin, 2=Supervisor, 3=Operador, 4=Consulta
 }
 
-const navItems: NavItem[] = [
-  { path: ROUTES.DASHBOARD, label: "Dashboard", icon: "📊" },
-  { path: ROUTES.PATIENTS, label: "Pacientes", icon: "👥" },
-  { path: ROUTES.CONTROLS, label: "Controles", icon: "🩺" },
-  { path: ROUTES.TREATMENTS, label: "Tratamientos", icon: "💊" },
-  { path: ROUTES.REPORTS, label: "Reportes", icon: "📄" },
-  { path: ROUTES.ALERTS, label: "Alertas", icon: "🔔" },
-  { path: ROUTES.USERS, label: "Usuarios", icon: "🔐" },
-  { path: ROUTES.SETTINGS, label: "Configuración", icon: "⚙️" },
+const allNavItems: NavItem[] = [
+  { path: ROUTES.DASHBOARD, label: "Dashboard", icon: "📊", minRole: 4 },
+  { path: ROUTES.PATIENTS, label: "Pacientes", icon: "👥", minRole: 4 },
+  { path: ROUTES.CONTROLS, label: "Controles", icon: "🩺", minRole: 4 },
+  { path: ROUTES.TREATMENTS, label: "Tratamientos", icon: "💊", minRole: 4 },
+  { path: ROUTES.REPORTS, label: "Reportes", icon: "📄", minRole: 4 },
+  { path: ROUTES.ALERTS, label: "Alertas", icon: "🔔", minRole: 4 },
+  { path: ROUTES.USERS, label: "Usuarios", icon: "🔐", minRole: 1 },
+  { path: ROUTES.SETTINGS, label: "Configuración", icon: "⚙️", minRole: 1 },
 ];
 
 interface SidebarProps {
@@ -24,6 +26,13 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const user = useAuthStore((state) => state.user);
+  const userRole = user?.rolId ?? 0;
+
+  // Filter items: users with lower role number (higher privilege) see more items.
+  // userRole <= item.minRole means higher-privilege users (lower numbers) pass more filters.
+  const visibleItems = allNavItems.filter((item) => userRole <= item.minRole);
+
   return (
     <aside
       className={`flex flex-col border-r border-neutral-200 bg-white transition-all duration-200 ${
@@ -46,7 +55,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

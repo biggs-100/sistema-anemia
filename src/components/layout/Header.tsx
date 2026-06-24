@@ -1,10 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
+import { ROUTES } from "@/utils/constants";
 
 export default function Header() {
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
   const handleLogout = async () => {
     await logout();
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   return (
@@ -16,7 +20,7 @@ export default function Header() {
       <div className="flex items-center gap-4">
         {user && (
           <span className="text-sm text-neutral-600">
-            {user.nombres} {user.apellidos}
+            👤 {user.nombres} {user.apellidos} — {user.rolNombre}
           </span>
         )}
         <button

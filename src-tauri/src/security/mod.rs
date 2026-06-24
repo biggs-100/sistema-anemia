@@ -2,7 +2,6 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use uuid::Uuid;
 
 use crate::errors::AppError;
 
@@ -26,7 +25,13 @@ pub fn verify_password(password: &str, hash: &str) -> Result<bool, AppError> {
         .is_ok())
 }
 
-/// Generates a new UUID v7 session token.
-pub fn generate_session_token() -> String {
-    Uuid::now_v7().to_string()
+/// Validates password complexity requirements.
+/// Returns `AppError::Validation` if the password is too short.
+pub fn validate_password_complexity(password: &str) -> Result<(), AppError> {
+    if password.len() < 6 {
+        return Err(AppError::Validation(
+            "La contraseña debe tener al menos 6 caracteres".to_string(),
+        ));
+    }
+    Ok(())
 }

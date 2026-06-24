@@ -24,6 +24,7 @@ pub trait UserRepository: Send + Sync {
         rol_id: Option<i64>,
         activo: Option<bool>,
     ) -> Result<User, AppError>;
+    async fn update_password(&self, id: i64, password_hash: &str) -> Result<(), AppError>;
     async fn deactivate(&self, id: i64) -> Result<(), AppError>;
     async fn list_all(&self) -> Result<Vec<User>, AppError>;
 }
@@ -131,6 +132,21 @@ impl UserRepository for SqliteUserRepository {
             .execute(&self.pool)
             .await
             .map_err(|e| db_error("deactivate user", e))?
+            .rows_affected();
+
+        if affected == 0 {
+            return Err(AppError::NotFound(format!("User {id} not found")));
+        }
+        Ok(())
+    }
+
+    async fn update_password(&self, id: i64, password_hash: &str) -> Result<(), AppError> {
+        let affected = sqlx::query("UPDATE users SET password_hash = ?1 WHERE id = ?2")
+            .bind(password_hash)
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| db_error("update password", e))?
             .rows_affected();
 
         if affected == 0 {

@@ -3,12 +3,9 @@ export interface User {
   usuario: string;
   nombres: string;
   apellidos: string;
-  email?: string;
   rolId: number;
-  rolNombre?: string;
-  activo?: boolean;
-  ultimoAcceso?: string;
-  createdAt?: string;
+  rolNombre: string;
+  activo: boolean;
 }
 
 export interface LoginDTO {
@@ -21,14 +18,12 @@ export interface CreateUserDTO {
   password: string;
   nombres: string;
   apellidos: string;
-  email?: string;
   rolId: number;
 }
 
 export interface UpdateUserDTO {
   nombres?: string;
   apellidos?: string;
-  email?: string;
   rolId?: number;
   activo?: boolean;
 }

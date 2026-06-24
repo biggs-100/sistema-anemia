@@ -4,11 +4,21 @@ use tauri::Manager;
 
 use crate::dto::{ApiResponse, CreateUserDTO, UpdateUserDTO};
 use crate::models::User;
+use crate::services::auth_service::ADMIN_ONLY;
 use crate::AppState;
 
 #[tauri::command]
-pub async fn list_users(app: AppHandle) -> Result<ApiResponse<Vec<User>>, String> {
+pub async fn list_users(
+    app: AppHandle,
+    token: String,
+) -> Result<ApiResponse<Vec<User>>, String> {
     let state: State<AppState> = app.state();
+    let _user = state
+        .auth_service
+        .require_role(&token, ADMIN_ONLY)
+        .await
+        .map_err(|e| e.to_string())?;
+
     let users = state
         .user_repo
         .list_all()
@@ -20,9 +30,15 @@ pub async fn list_users(app: AppHandle) -> Result<ApiResponse<Vec<User>>, String
 #[tauri::command]
 pub async fn create_user(
     app: AppHandle,
+    token: String,
     dto: CreateUserDTO,
 ) -> Result<ApiResponse<User>, String> {
     let state: State<AppState> = app.state();
+    let _user = state
+        .auth_service
+        .require_role(&token, ADMIN_ONLY)
+        .await
+        .map_err(|e| e.to_string())?;
 
     // Hash password
     let password_hash =
@@ -54,10 +70,16 @@ pub async fn create_user(
 #[tauri::command]
 pub async fn update_user(
     app: AppHandle,
+    token: String,
     id: i64,
     dto: UpdateUserDTO,
 ) -> Result<ApiResponse<User>, String> {
     let state: State<AppState> = app.state();
+    let _user = state
+        .auth_service
+        .require_role(&token, ADMIN_ONLY)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let user = state
         .user_repo
@@ -83,9 +105,15 @@ pub async fn update_user(
 #[tauri::command]
 pub async fn deactivate_user(
     app: AppHandle,
+    token: String,
     id: i64,
 ) -> Result<ApiResponse<()>, String> {
     let state: State<AppState> = app.state();
+    let _user = state
+        .auth_service
+        .require_role(&token, ADMIN_ONLY)
+        .await
+        .map_err(|e| e.to_string())?;
 
     state
         .user_repo

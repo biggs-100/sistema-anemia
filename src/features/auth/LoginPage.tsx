@@ -5,19 +5,18 @@ import { ROUTES } from "@/utils/constants";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, loading, error, clearError } = useAuthStore();
-  const [username, setUsername] = useState("");
+  const { login, isLoading, error, clearError } = useAuthStore();
+  const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     try {
-      await login(username, password);
-      // Tauri invoke("login") will set isAuthenticated on success
+      await login(usuario, password);
       navigate(ROUTES.DASHBOARD, { replace: true });
     } catch {
-      // Error is handled by the store
+      // Error is already handled and stored in the store
     }
   };
 
@@ -33,17 +32,18 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-neutral-700">
+            <label htmlFor="usuario" className="block text-sm font-medium text-neutral-700">
               Usuario
             </label>
             <input
-              id="username"
+              id="usuario"
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
               className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="Ingrese su usuario"
               required
+              autoFocus
             />
           </div>
 
@@ -68,10 +68,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Ingresando..." : "Ingresar"}
+            {isLoading ? "Ingresando..." : "Ingresar"}
           </button>
         </form>
       </div>
