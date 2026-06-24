@@ -135,8 +135,22 @@ fn resolve_data_dir() -> PathBuf {
 }
 
 fn resolve_migrations_dir() -> PathBuf {
-    let mut path = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
-    path.pop(); // remove exe name
-    path.push("migrations");
-    path
+    // Try next to the executable first (production: MSI installs migrations/ next to .exe)
+    let exe_path = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
+    let exe_dir = exe_path.parent().unwrap_or(&exe_path);
+    let exe_migrations = exe_dir.join("migrations");
+    if exe_migrations.exists() {
+        return exe_migrations;
+    }
+
+    // Fallback: during development, check relative to CARGO_MANIFEST_DIR
+    if let Ok(manifest) = std::env::var("CARGO_MANIFEST_DIR") {
+        let cargo_migrations = PathBuf::from(manifest).join("migrations");
+        if cargo_migrations.exists() {
+            return cargo_migrations;
+        }
+    }
+
+    // Last resort: relative to current working directory
+    PathBuf::from("migrations")
 }

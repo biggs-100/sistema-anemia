@@ -46,19 +46,24 @@ pub fn run() {
         )
         .init();
 
+    // Create a Tokio runtime for async initialization (Tauri v2 setup runs on main thread)
+    let rt = tokio::runtime::Runtime::new()
+        .expect("Failed to create Tokio runtime");
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
-        .setup(|app| {
-            let handle = tokio::runtime::Handle::current();
+        .setup(move |app| {
+            // Enter the Tokio runtime context so tokio::spawn works in setup
+            let _rt_guard = rt.enter();
 
-            let pool = handle.block_on(database::init_db())?;
-            handle.block_on(database::run_migrations(&pool))?;
+            let pool = rt.block_on(database::init_db())?;
+            rt.block_on(database::run_migrations(&pool))?;
 
             // --- Admin seed: create default admin if DB is empty ---
-            handle.block_on(seed_admin(&pool))?;
+            rt.block_on(seed_admin(&pool))?;
 
             // --- Resolve data directories ---
             let data_dir = resolve_data_dir();
