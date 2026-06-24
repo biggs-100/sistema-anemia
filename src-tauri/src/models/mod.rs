@@ -168,6 +168,43 @@ pub enum HemoglobinaClasificacion {
     Severa,
 }
 
+/// Anemia classification enum used in `ControlResponse` DTO.
+///
+/// This mirrors `HemoglobinaClasificacion` but is serialized as `snake_case`
+/// strings for the frontend-facing API (`"normal"`, `"leve"`, etc.) and
+/// provides convenience methods `from_hemoglobina` and `as_str`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum ClasificacionAnemia {
+    Normal,
+    Leve,
+    Moderada,
+    Severa,
+}
+
+impl ClasificacionAnemia {
+    pub fn from_hemoglobina(hb: f64) -> Self {
+        if hb >= 11.0 {
+            ClasificacionAnemia::Normal
+        } else if hb >= 10.0 {
+            ClasificacionAnemia::Leve
+        } else if hb >= 7.0 {
+            ClasificacionAnemia::Moderada
+        } else {
+            ClasificacionAnemia::Severa
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ClasificacionAnemia::Normal => "normal",
+            ClasificacionAnemia::Leve => "leve",
+            ClasificacionAnemia::Moderada => "moderada",
+            ClasificacionAnemia::Severa => "severa",
+        }
+    }
+}
+
 /// Classifies a hemoglobin value into a severity level.
 ///
 /// * `Normal`   — hb >= 11.0 g/dL

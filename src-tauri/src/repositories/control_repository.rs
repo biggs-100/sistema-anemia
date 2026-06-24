@@ -16,6 +16,19 @@ pub trait ControlRepository: Send + Sync {
         fecha_inicio: &str,
         fecha_fin: &str,
     ) -> Result<Vec<Control>, AppError>;
+    async fn count_by_paciente(&self, paciente_id: i64) -> Result<i64, AppError>;
+    async fn find_by_paciente_paginated(
+        &self,
+        paciente_id: i64,
+        page: i64,
+        page_size: i64,
+    ) -> Result<Vec<Control>, AppError>;
+    async fn find_by_paciente_date_range(
+        &self,
+        paciente_id: i64,
+        fecha_inicio: &str,
+        fecha_fin: &str,
+    ) -> Result<Vec<Control>, AppError>;
 }
 
 pub struct SqliteControlRepository {
@@ -123,6 +136,62 @@ impl ControlRepository for SqliteControlRepository {
         .fetch_all(&self.pool)
         .await
         .map_err(|e| db_error("find controls by date range", e))?;
+
+        Ok(rows.into_iter().map(ControlRow::into_model).collect())
+    }
+
+    async fn count_by_paciente(&self, paciente_id: i64) -> Result<i64, AppError> {
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM controles WHERE paciente_id = ?1",
+        )
+        .bind(paciente_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| db_error("count controls by patient", e))
+    }
+
+    async fn find_by_paciente_paginated(
+        &self,
+        paciente_id: i64,
+        page: i64,
+        page_size: i64,
+    ) -> Result<Vec<Control>, AppError> {
+        let offset = (page - 1).max(0) * page_size;
+        let rows = sqlx::query_as::<_, ControlRow>(
+            "SELECT id, paciente_id, fecha_control, edad_meses, peso, talla, hemoglobina, \
+             temperatura, observaciones, usuario_id, creado_en \
+             FROM controles WHERE paciente_id = ?1 \
+             ORDER BY fecha_control DESC LIMIT ?2 OFFSET ?3",
+        )
+        .bind(paciente_id)
+        .bind(page_size)
+        .bind(offset)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| db_error("find controls paginated", e))?;
+
+        Ok(rows.into_iter().map(ControlRow::into_model).collect())
+    }
+
+    async fn find_by_paciente_date_range(
+        &self,
+        paciente_id: i64,
+        fecha_inicio: &str,
+        fecha_fin: &str,
+    ) -> Result<Vec<Control>, AppError> {
+        let rows = sqlx::query_as::<_, ControlRow>(
+            "SELECT c.id, c.paciente_id, c.fecha_control, c.edad_meses, c.peso, c.talla, \
+             c.hemoglobina, c.temperatura, c.observaciones, c.usuario_id, c.creado_en \
+             FROM controles c \
+             WHERE c.paciente_id = ?1 AND c.fecha_control >= ?2 AND c.fecha_control <= ?3 \
+             ORDER BY c.fecha_control DESC",
+        )
+        .bind(paciente_id)
+        .bind(fecha_inicio)
+        .bind(fecha_fin)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| db_error("find controls by patient date range", e))?;
 
         Ok(rows.into_iter().map(ControlRow::into_model).collect())
     }

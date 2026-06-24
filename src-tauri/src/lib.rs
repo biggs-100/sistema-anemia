@@ -92,6 +92,7 @@ pub fn run() {
             let control_service = ControlService::new(
                 Box::new(control_repo),
                 AuditService::new(pool.clone()),
+                pool.clone(),
             );
 
             let treatment_service = TreatmentService::new(
@@ -138,6 +139,7 @@ pub fn run() {
             commands::controls::create_control,
             commands::controls::update_control,
             commands::controls::get_controls,
+            commands::controls::get_controls_by_date_range,
             commands::treatments::create_treatment,
             commands::treatments::finish_treatment,
             commands::treatments::get_treatments,

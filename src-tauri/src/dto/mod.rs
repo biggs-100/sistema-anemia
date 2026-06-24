@@ -136,6 +136,28 @@ pub struct SearchResult<T: Serialize> {
     pub page_size: i64,
 }
 
+/// Public-facing control response with computed `clasificacion`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ControlResponse {
+    pub id: i64,
+    pub paciente_id: i64,
+    pub fecha_control: String,
+    pub edad_meses: Option<i64>,
+    pub peso: f64,
+    pub talla: f64,
+    pub hemoglobina: f64,
+    /// Computed anemia severity: "normal" | "leve" | "moderada" | "severa"
+    pub clasificacion: String,
+    pub temperatura: Option<f64>,
+    pub observaciones: Option<String>,
+    pub usuario_id: i64,
+    pub creado_en: Option<String>,
+}
+
+/// Return type for `create_control` command — identical to `ControlResponse`.
+pub type CreateControlResponse = ControlResponse;
+
 // ---------------------------------------------------------------------------
 // Generic API Response
 // ---------------------------------------------------------------------------
