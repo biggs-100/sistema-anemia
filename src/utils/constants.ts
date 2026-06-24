@@ -49,6 +49,9 @@ export const API_COMMANDS = {
   RESTORE_BACKUP: "restore_backup",
   LIST_BACKUPS: "list_backups",
 
+  // Dashboard
+  GET_DASHBOARD_STATS: "get_dashboard_stats",
+
   // Users
   LIST_USERS: "list_users",
   CREATE_USER: "create_user",

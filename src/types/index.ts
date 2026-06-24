@@ -25,6 +25,13 @@ export type {
 } from "./treatment";
 
 export type {
+  DashboardStats,
+  HbDistribucion,
+  EvolucionMensual,
+  AlertaResumen,
+} from "./dashboard";
+
+export type {
   User,
   LoginDTO,
   CreateUserDTO,

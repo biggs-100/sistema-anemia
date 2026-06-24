@@ -153,6 +153,7 @@ pub fn run() {
             commands::users::update_user,
             commands::users::deactivate_user,
             commands::centros_poblados::list_centros_poblados,
+            commands::dashboard::get_dashboard_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
