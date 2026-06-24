@@ -1,46 +1,185 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ROUTES } from "@/utils/constants";
+import { useParams, useNavigate } from "react-router-dom";
+import { usePatientDetail } from "@/hooks/usePatients";
+import { ROUTES, SEXO_LABELS } from "@/utils/constants";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 type TabId = "datos" | "controles" | "tratamientos" | "visitas";
 
-interface Tab {
+interface TabItem {
   id: TabId;
   label: string;
 }
 
-const tabs: Tab[] = [
+const tabs: TabItem[] = [
   { id: "datos", label: "Datos Generales" },
   { id: "controles", label: "Controles" },
   { id: "tratamientos", label: "Tratamientos" },
   { id: "visitas", label: "Visitas" },
 ];
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function formatFecha(fecha: string): string {
+  if (!fecha) return "—";
+  try {
+    const d = new Date(fecha);
+    return d.toLocaleDateString("es-PE", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return fecha;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// InfoRow
+// ---------------------------------------------------------------------------
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-3">
+      <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+        {label}
+      </dt>
+      <dd className="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">
+        {value || "—"}
+      </dd>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const patientId = id ? Number(id) : 0;
+  const { patient, loading, error, loadPatient, clearError } = usePatientDetail(patientId);
   const [activeTab, setActiveTab] = useState<TabId>("datos");
 
-  // Tauri invoke("get_patient", { id: Number(id) }) will load patient data
-  // Also: get_controls, get_treatments, get_visitas per tab
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center p-6">
+        <div className="flex items-center gap-2 text-neutral-400">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm">Cargando paciente...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-700">{error}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => patientId && loadPatient(patientId)}
+              className="text-sm font-medium text-red-700 underline hover:text-red-800"
+            >
+              Reintentar
+            </button>
+            <button onClick={clearError} className="text-sm text-red-500 hover:text-red-700">
+              ×
+            </button>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate(ROUTES.PATIENTS)}
+          className="text-sm text-blue-600 hover:text-blue-700"
+        >
+          &larr; Volver a Pacientes
+        </button>
+      </div>
+    );
+  }
+
+  // Not found
+  if (!patient) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-700">Paciente no encontrado</p>
+        </div>
+        <button
+          onClick={() => navigate(ROUTES.PATIENTS)}
+          className="text-sm text-blue-600 hover:text-blue-700"
+        >
+          &larr; Volver a Pacientes
+        </button>
+      </div>
+    );
+  }
+
+  const nombreCompleto = `${patient.apellidoPaterno} ${patient.apellidoMaterno}, ${patient.nombres}`;
+  const sexoLabel = SEXO_LABELS[patient.sexo] || patient.sexo;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Link
-            to={ROUTES.PATIENTS}
-            className="text-sm text-blue-600 hover:text-blue-700"
-          >
-            &larr; Volver a Pacientes
-          </Link>
-          <h2 className="mt-1 text-2xl font-bold text-neutral-900">
-            Detalle del Paciente
-          </h2>
-          <p className="text-sm text-neutral-500">
-            ID: {id} — Historia Clínica: {/* patient?.historiaClinica */}
-          </p>
+    <div className="space-y-6 p-6">
+      {/* Breadcrumb */}
+      <button
+        onClick={() => navigate(ROUTES.PATIENTS)}
+        className="text-sm text-blue-600 hover:text-blue-700"
+      >
+        &larr; Volver a Pacientes
+      </button>
+
+      {/* Patient info header card */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold text-neutral-900">{nombreCompleto}</h2>
+            <p className="text-sm text-neutral-500">
+              HC: {patient.historiaClinica} &nbsp;|&nbsp; DNI: {patient.dni}
+            </p>
+            <p className="text-sm text-neutral-500">
+              Edad: {patient.edad} &nbsp;|&nbsp; Sexo: {sexoLabel}
+            </p>
+            {patient.nombreApoderado && (
+              <p className="text-sm text-neutral-500">
+                Apoderado: {patient.nombreApoderado}
+                {patient.celularApoderado && ` — ${patient.celularApoderado}`}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                patient.activo
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {patient.activo ? "Activo" : "Inactivo"}
+            </span>
+          </div>
         </div>
+      </div>
+
+      {/* Edit & back buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => navigate(ROUTES.PATIENT_EDIT.replace(":id", String(patient.id)))}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Editar Paciente
+        </button>
       </div>
 
       {/* Tabs */}
@@ -66,42 +205,24 @@ export default function PatientDetailPage() {
       <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
         {activeTab === "datos" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-neutral-900">
-              Datos Generales
-            </h3>
-            {/* Patient info fields — populated via Tauri invoke */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-xs font-medium uppercase text-neutral-500">DNI</p>
-                <p className="mt-1 text-sm text-neutral-900">—</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-neutral-500">Nombres</p>
-                <p className="mt-1 text-sm text-neutral-900">—</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-neutral-500">
-                  Apellido Paterno
-                </p>
-                <p className="mt-1 text-sm text-neutral-900">—</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-neutral-500">
-                  Apellido Materno
-                </p>
-                <p className="mt-1 text-sm text-neutral-900">—</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-neutral-500">
-                  Fecha Nacimiento
-                </p>
-                <p className="mt-1 text-sm text-neutral-900">—</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-neutral-500">Sexo</p>
-                <p className="mt-1 text-sm text-neutral-900">—</p>
-              </div>
-            </div>
+            <h3 className="text-lg font-semibold text-neutral-900">Datos Generales</h3>
+            <dl className="divide-y divide-neutral-200">
+              <InfoRow label="Historia Clínica" value={patient.historiaClinica} />
+              <InfoRow label="DNI" value={patient.dni} />
+              <InfoRow label="Nombres" value={patient.nombres} />
+              <InfoRow label="Apellido Paterno" value={patient.apellidoPaterno} />
+              <InfoRow label="Apellido Materno" value={patient.apellidoMaterno} />
+              <InfoRow label="Fecha de Nacimiento" value={formatFecha(patient.fechaNacimiento)} />
+              <InfoRow label="Edad" value={patient.edad} />
+              <InfoRow label="Sexo" value={sexoLabel} />
+              <InfoRow
+                label="Centro Poblado"
+                value={patient.centroPobladoNombre ?? "—"}
+              />
+              <InfoRow label="Apoderado" value={patient.nombreApoderado ?? "—"} />
+              <InfoRow label="Celular Apoderado" value={patient.celularApoderado ?? "—"} />
+              <InfoRow label="Estado" value={patient.activo ? "Activo" : "Inactivo"} />
+            </dl>
           </div>
         )}
 
@@ -109,36 +230,37 @@ export default function PatientDetailPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-neutral-900">Controles</h3>
-              {/* Nuevo Control button */}
             </div>
-            <p className="text-sm text-neutral-400">
-              Historial de controles — próximamente
-            </p>
-            {/* Control list rendered here via Tauri invoke("get_controls") */}
+            <div className="rounded-lg border-2 border-dashed border-neutral-200 p-8 text-center">
+              <p className="text-sm text-neutral-400">Historial de controles — próximamente</p>
+              <p className="mt-1 text-xs text-neutral-300">
+                Esta sección mostrará el historial de controles del paciente
+              </p>
+            </div>
           </div>
         )}
 
         {activeTab === "tratamientos" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-neutral-900">
-              Tratamientos
-            </h3>
-            <p className="text-sm text-neutral-400">
-              Historial de tratamientos — próximamente
-            </p>
-            {/* Treatment list via Tauri invoke("get_treatments") */}
+            <h3 className="text-lg font-semibold text-neutral-900">Tratamientos</h3>
+            <div className="rounded-lg border-2 border-dashed border-neutral-200 p-8 text-center">
+              <p className="text-sm text-neutral-400">Historial de tratamientos — próximamente</p>
+              <p className="mt-1 text-xs text-neutral-300">
+                Esta sección mostrará los tratamientos del paciente
+              </p>
+            </div>
           </div>
         )}
 
         {activeTab === "visitas" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-neutral-900">
-              Visitas Domiciliarias
-            </h3>
-            <p className="text-sm text-neutral-400">
-              Registro de visitas — próximamente
-            </p>
-            {/* Visitas list via Tauri invoke */}
+            <h3 className="text-lg font-semibold text-neutral-900">Visitas Domiciliarias</h3>
+            <div className="rounded-lg border-2 border-dashed border-neutral-200 p-8 text-center">
+              <p className="text-sm text-neutral-400">Registro de visitas — próximamente</p>
+              <p className="mt-1 text-xs text-neutral-300">
+                Esta sección mostrará las visitas domiciliarias del paciente
+              </p>
+            </div>
           </div>
         )}
       </div>

@@ -3,9 +3,11 @@ export type {
 } from "./api";
 
 export type {
+  CentroPoblado,
   Patient,
   CreatePatientDTO,
   UpdatePatientDTO,
+  SearchResult,
 } from "./patient";
 
 export type {

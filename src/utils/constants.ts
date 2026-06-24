@@ -4,6 +4,7 @@ export const ROUTES = {
   PATIENTS: "/patients",
   PATIENT_NEW: "/patients/new",
   PATIENT_DETAIL: "/patients/:id",
+  PATIENT_EDIT: "/patients/:id/edit",
   CONTROLS: "/controls",
   TREATMENTS: "/treatments",
   REPORTS: "/reports",
@@ -25,6 +26,7 @@ export const API_COMMANDS = {
   GET_PATIENT: "get_patient",
   SEARCH_PATIENTS: "search_patients",
   DEACTIVATE_PATIENT: "deactivate_patient",
+  LIST_CENTROS_POBLADOS: "list_centros_poblados",
 
   // Controls
   CREATE_CONTROL: "create_control",
@@ -67,3 +69,8 @@ export const PAGINATION = {
 } as const;
 
 export const DATE_FORMAT = "YYYY-MM-DD" as const;
+
+export const SEXO_LABELS: Record<string, string> = {
+  M: "Masculino",
+  F: "Femenino",
+} as const;

@@ -41,6 +41,7 @@ const router = createBrowserRouter([
           { path: "patients", element: <SuspenseWrapper><PatientListPage /></SuspenseWrapper> },
           { path: "patients/new", element: <SuspenseWrapper><PatientFormPage /></SuspenseWrapper> },
           { path: "patients/:id", element: <SuspenseWrapper><PatientDetailPage /></SuspenseWrapper> },
+          { path: "patients/:id/edit", element: <SuspenseWrapper><PatientFormPage /></SuspenseWrapper> },
           { path: "controls", element: <SuspenseWrapper><ControlsPage /></SuspenseWrapper> },
           { path: "treatments", element: <SuspenseWrapper><TreatmentsPage /></SuspenseWrapper> },
           { path: "reports", element: <SuspenseWrapper><ReportsPage /></SuspenseWrapper> },

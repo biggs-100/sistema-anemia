@@ -1,3 +1,11 @@
+export interface CentroPoblado {
+  id: number;
+  nombre: string;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+}
+
 export interface Patient {
   id: number;
   historiaClinica: string;
@@ -7,8 +15,12 @@ export interface Patient {
   apellidoMaterno: string;
   fechaNacimiento: string;
   sexo: string;
-  centroPobladoId?: number;
-  activo?: boolean;
+  edad: string;
+  centroPobladoId: number | null;
+  centroPobladoNombre: string | null;
+  nombreApoderado: string | null;
+  celularApoderado: string | null;
+  activo: boolean;
 }
 
 export interface CreatePatientDTO {
@@ -19,16 +31,16 @@ export interface CreatePatientDTO {
   apellidoMaterno: string;
   fechaNacimiento: string;
   sexo: string;
-  direccion?: string;
-  centroPobladoId?: number;
+  centroPobladoId: number;
+  nombreApoderado: string;
+  celularApoderado?: string;
 }
 
-export interface UpdatePatientDTO {
-  nombres?: string;
-  apellidoPaterno?: string;
-  apellidoMaterno?: string;
-  fechaNacimiento?: string;
-  sexo?: string;
-  direccion?: string;
-  centroPobladoId?: number;
+export type UpdatePatientDTO = CreatePatientDTO;
+
+export interface SearchResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
 }

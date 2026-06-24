@@ -1,53 +1,120 @@
-import { useCallback, useState } from "react";
+import { useEffect, useCallback } from "react";
 import { usePatientStore } from "@/stores/patientStore";
-import type { Patient, CreatePatientDTO } from "@/types/patient";
+import type { Patient, CreatePatientDTO, UpdatePatientDTO, CentroPoblado } from "@/types";
 
-interface UsePatientsReturn {
-  patients: Patient[];
-  loading: boolean;
-  error: string | null;
-  refresh: () => Promise<void>;
-  search: (query: string) => Promise<void>;
-  createPatient: (dto: CreatePatientDTO) => Promise<void>;
-}
+// ---------------------------------------------------------------------------
+// Hook for list page: search, pagination, centros poblados
+// ---------------------------------------------------------------------------
+export function usePatientList() {
+  const patients = usePatientStore((s) => s.patients);
+  const total = usePatientStore((s) => s.total);
+  const page = usePatientStore((s) => s.page);
+  const pageSize = usePatientStore((s) => s.pageSize);
+  const searchQuery = usePatientStore((s) => s.searchQuery);
+  const loading = usePatientStore((s) => s.loading);
+  const error = usePatientStore((s) => s.error);
+  const centrosPoblados = usePatientStore((s) => s.centrosPoblados);
+  const loadPatients = usePatientStore((s) => s.loadPatients);
+  const loadCentrosPoblados = usePatientStore((s) => s.loadCentrosPoblados);
+  const setPage = usePatientStore((s) => s.setPage);
+  const setSearchQuery = usePatientStore((s) => s.setSearchQuery);
+  const clearError = usePatientStore((s) => s.clearError);
+  const deactivatePatient = usePatientStore((s) => s.deactivatePatient);
 
-export function usePatients(): UsePatientsReturn {
-  const [error, setError] = useState<string | null>(null);
-  const { patients, loading, loadPatients, searchPatients, createPatient: storeCreate } = usePatientStore();
-
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      await loadPatients();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar pacientes");
-    }
-  }, [loadPatients]);
+  // Load centros poblados once on first mount
+  useEffect(() => {
+    loadCentrosPoblados();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const search = useCallback(
-    async (query: string) => {
-      setError(null);
-      try {
-        await searchPatients(query);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al buscar pacientes");
-      }
+    (query: string) => {
+      setSearchQuery(query);
+      loadPatients(query, 1);
     },
-    [searchPatients],
+    [setSearchQuery, loadPatients],
   );
 
-  const createPatient = useCallback(
-    async (dto: CreatePatientDTO) => {
-      setError(null);
-      try {
-        await storeCreate(dto);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al crear paciente");
-        throw err;
-      }
-    },
-    [storeCreate],
-  );
+  const refresh = useCallback(() => {
+    loadPatients(searchQuery, page);
+  }, [loadPatients, searchQuery, page]);
 
-  return { patients, loading, error, refresh, search, createPatient };
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+
+  return {
+    patients,
+    total,
+    page,
+    pageSize,
+    totalPages,
+    from,
+    to,
+    searchQuery,
+    loading,
+    error,
+    centrosPoblados,
+    search,
+    setPage,
+    refresh,
+    clearError,
+    deactivatePatient,
+  } as const;
+}
+
+// ---------------------------------------------------------------------------
+// Hook for detail page: single patient fetch
+// ---------------------------------------------------------------------------
+export function usePatientDetail(id: number) {
+  const selectedPatient = usePatientStore((s) => s.selectedPatient);
+  const loadingDetail = usePatientStore((s) => s.loadingDetail);
+  const error = usePatientStore((s) => s.error);
+  const loadPatient = usePatientStore((s) => s.loadPatient);
+  const clearError = usePatientStore((s) => s.clearError);
+
+  useEffect(() => {
+    if (id) {
+      loadPatient(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  return {
+    patient: selectedPatient,
+    loading: loadingDetail,
+    error,
+    loadPatient,
+    clearError,
+  } as const;
+}
+
+// ---------------------------------------------------------------------------
+// Hook for form page: create / update
+// ---------------------------------------------------------------------------
+export function usePatientForm() {
+  const loading = usePatientStore((s) => s.loading);
+  const error = usePatientStore((s) => s.error);
+  const centrosPoblados = usePatientStore((s) => s.centrosPoblados);
+  const createPatient = usePatientStore((s) => s.createPatient);
+  const updatePatient = usePatientStore((s) => s.updatePatient);
+  const loadCentrosPoblados = usePatientStore((s) => s.loadCentrosPoblados);
+  const loadPatient = usePatientStore((s) => s.loadPatient);
+  const clearError = usePatientStore((s) => s.clearError);
+
+  // Load centros poblados on first mount
+  useEffect(() => {
+    loadCentrosPoblados();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return {
+    loading,
+    error,
+    centrosPoblados,
+    createPatient,
+    updatePatient,
+    loadPatient,
+    clearError,
+  } as const;
 }
