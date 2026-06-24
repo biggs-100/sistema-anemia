@@ -1,0 +1,673 @@
+# PRD-004
+
+# UX/UI y Diseño de Pantallas
+
+# Sistema de Seguimiento de Niños Tratados por Anemia
+
+**Versión:** 1.0
+
+**Dependencia:** PRD-001, PRD-002, PRD-003
+
+---
+
+# 1. Objetivo
+
+Definir la experiencia de usuario (UX), diseño de interfaz (UI), navegación, componentes reutilizables y estructura visual de la aplicación.
+
+---
+
+# 2. Principios de Diseño
+
+La interfaz deberá cumplir:
+
+* Fácil de aprender.
+* Rápida para digitación.
+* Compatible con personal no técnico.
+* Accesible.
+* Moderna.
+* Profesional.
+* Optimizada para jornadas largas.
+
+---
+
+# 3. Perfil de Usuarios
+
+## Administrador
+
+Necesita:
+
+* Gestión de usuarios.
+* Backups.
+* Auditoría.
+* Configuración.
+
+---
+
+## Personal de Salud
+
+Necesita:
+
+* Registrar pacientes.
+* Registrar controles.
+* Registrar tratamientos.
+* Buscar rápidamente.
+
+---
+
+## Supervisor
+
+Necesita:
+
+* Consultar estadísticas.
+* Revisar indicadores.
+* Generar reportes.
+
+---
+
+# 4. Diseño General
+
+## Layout Principal
+
+```text
+┌──────────────────────────────────────────────┐
+│                  HEADER                      │
+├──────────────┬───────────────────────────────┤
+│              │                               │
+│              │                               │
+│    MENU      │         CONTENIDO             │
+│   LATERAL    │                               │
+│              │                               │
+│              │                               │
+├──────────────┴───────────────────────────────┤
+│                 FOOTER                       │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+# 5. Pantalla de Login
+
+## Objetivo
+
+Autenticar usuarios.
+
+---
+
+## Wireframe
+
+```text
+┌──────────────────────────────┐
+│                              │
+│      SISTEMA ANEMIA          │
+│                              │
+│ Usuario                      │
+│ [____________________]       │
+│                              │
+│ Contraseña                   │
+│ [____________________]       │
+│                              │
+│ [ Iniciar Sesión ]           │
+│                              │
+└──────────────────────────────┘
+```
+
+---
+
+## Campos
+
+* Usuario
+* Contraseña
+
+---
+
+## Validaciones
+
+* Campos obligatorios.
+* Usuario existente.
+* Contraseña válida.
+
+---
+
+# 6. Dashboard Principal
+
+## Objetivo
+
+Mostrar resumen general.
+
+---
+
+## Wireframe
+
+```text
+┌─────────────────────────────────────────┐
+│ Dashboard                               │
+├─────────────────────────────────────────┤
+│ Pacientes      │  1250                  │
+├─────────────────────────────────────────┤
+│ Controles      │  320                   │
+├─────────────────────────────────────────┤
+│ Anemia Severa  │   12                   │
+├─────────────────────────────────────────┤
+│ Alertas        │   18                   │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## Componentes
+
+### Tarjetas KPI
+
+* Total pacientes.
+* Controles del mes.
+* Tratamientos activos.
+* Alertas.
+
+---
+
+### Gráfico Evolución
+
+Mostrar:
+
+* Casos normales.
+* Casos leves.
+* Casos moderados.
+* Casos severos.
+
+---
+
+# 7. Módulo Pacientes
+
+## Objetivo
+
+Administrar pacientes.
+
+---
+
+## Lista de Pacientes
+
+```text
+┌──────────────────────────────────────────┐
+│ Buscar: [_____________]                  │
+├──────────────────────────────────────────┤
+│ DNI | Nombre | Edad | Estado            │
+├──────────────────────────────────────────┤
+│ ...                                      │
+└──────────────────────────────────────────┘
+```
+
+---
+
+## Acciones
+
+* Nuevo paciente.
+* Editar.
+* Ver historial.
+* Imprimir ficha.
+
+---
+
+# 8. Formulario Paciente
+
+## Wireframe
+
+```text
+Datos Generales
+
+Historia Clínica
+[________________]
+
+DNI
+[________________]
+
+Nombres
+[________________]
+
+Apellido Paterno
+[________________]
+
+Apellido Materno
+[________________]
+
+Fecha Nacimiento
+[________________]
+
+Sexo
+[▼]
+
+Centro Poblado
+[▼]
+
+Apoderado
+[________________]
+
+Celular
+[________________]
+
+[ Guardar ]
+```
+
+---
+
+# 9. Historial del Paciente
+
+## Objetivo
+
+Visualizar toda la información clínica.
+
+---
+
+## Wireframe
+
+```text
+Paciente: Juan Pérez
+
+─────────────────────────
+
+DATOS GENERALES
+
+CONTROLES
+
+TRATAMIENTOS
+
+VISITAS
+
+DOCUMENTOS
+```
+
+---
+
+# 10. Módulo Controles
+
+## Registro de Control
+
+```text
+Fecha
+
+Peso
+
+Talla
+
+Hemoglobina
+
+Temperatura
+
+Observaciones
+```
+
+---
+
+## Botones
+
+```text
+[ Guardar ]
+
+[ Cancelar ]
+```
+
+---
+
+# 11. Evolución de Hemoglobina
+
+## Gráfico
+
+```text
+12.0 ──────────●
+11.0 ───────●
+10.0 ───●
+ 9.0 ●
+
+      Ene Feb Mar Abr
+```
+
+---
+
+## Objetivo
+
+Visualizar progreso del tratamiento.
+
+---
+
+# 12. Módulo Tratamientos
+
+## Lista
+
+```text
+Medicamento
+
+Dosis
+
+Frecuencia
+
+Inicio
+
+Fin
+
+Estado
+```
+
+---
+
+## Estados
+
+* Activo
+* Suspendido
+* Finalizado
+
+---
+
+# 13. Módulo Alertas
+
+## Objetivo
+
+Mostrar casos prioritarios.
+
+---
+
+## Ejemplos
+
+```text
+⚠ Control vencido
+
+⚠ Hemoglobina crítica
+
+⚠ Tratamiento vencido
+```
+
+---
+
+# 14. Centro de Reportes
+
+## Reportes Disponibles
+
+### Pacientes Registrados
+
+### Controles por Mes
+
+### Casos de Anemia
+
+### Tratamientos Activos
+
+### Alertas Pendientes
+
+---
+
+## Exportación
+
+* PDF
+* Excel
+* CSV
+
+---
+
+# 15. Configuración
+
+## Secciones
+
+### Usuarios
+
+### Roles
+
+### Centros Poblados
+
+### Backups
+
+### Auditoría
+
+---
+
+# 16. Pantalla de Usuarios
+
+## Wireframe
+
+```text
+Usuario
+
+Nombre
+
+Rol
+
+Estado
+
+[ Nuevo ]
+
+[ Editar ]
+
+[ Desactivar ]
+```
+
+---
+
+# 17. Pantalla de Auditoría
+
+## Objetivo
+
+Monitorear cambios.
+
+---
+
+## Tabla
+
+```text
+Fecha
+
+Usuario
+
+Acción
+
+Tabla
+
+Registro
+```
+
+---
+
+# 18. Pantalla de Backups
+
+## Información
+
+```text
+Último Backup
+
+Estado
+
+Tamaño
+
+Fecha
+```
+
+---
+
+## Acciones
+
+```text
+[ Crear Backup ]
+
+[ Restaurar ]
+
+[ Descargar ]
+```
+
+---
+
+# 19. Menú Lateral
+
+```text
+Dashboard
+
+Pacientes
+
+Controles
+
+Tratamientos
+
+Alertas
+
+Reportes
+
+Usuarios
+
+Configuración
+```
+
+---
+
+# 20. Navegación
+
+```text
+Login
+
+↓
+
+Dashboard
+
+↓
+├── Pacientes
+│
+├── Controles
+│
+├── Tratamientos
+│
+├── Alertas
+│
+├── Reportes
+│
+└── Configuración
+```
+
+---
+
+# 21. Componentes Reutilizables
+
+## Inputs
+
+* TextInput
+* NumberInput
+* DateInput
+
+---
+
+## Tablas
+
+* DataTable
+
+---
+
+## Modales
+
+* ConfirmModal
+
+---
+
+## Tarjetas
+
+* StatCard
+
+---
+
+## Botones
+
+* PrimaryButton
+* SecondaryButton
+* DangerButton
+
+---
+
+# 22. Sistema de Colores
+
+## Primario
+
+```text
+#2563EB
+```
+
+---
+
+## Éxito
+
+```text
+#16A34A
+```
+
+---
+
+## Advertencia
+
+```text
+#F59E0B
+```
+
+---
+
+## Error
+
+```text
+#DC2626
+```
+
+---
+
+# 23. Tipografía
+
+## Principal
+
+Inter
+
+---
+
+## Tamaños
+
+Título:
+
+```text
+24px
+```
+
+Subtítulo:
+
+```text
+18px
+```
+
+Texto:
+
+```text
+14px
+```
+
+---
+
+# 24. Accesibilidad
+
+* Navegación por teclado.
+* Contraste adecuado.
+* Tamaños legibles.
+* Indicadores visuales claros.
+
+---
+
+# 25. Responsive
+
+Resolución mínima:
+
+```text
+1366x768
+```
+
+Resolución objetivo:
+
+```text
+1920x1080
+```
+
+---
+
+# 26. Criterios de Aceptación
+
+* Navegación intuitiva.
+* Formularios rápidos.
+* Menos de 3 clics para registrar un control.
+* Diseño consistente.
+* Compatible con usuarios no técnicos.
+
+FIN DEL DOCUMENTO

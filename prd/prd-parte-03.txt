@@ -1,0 +1,608 @@
+# PRD-003
+
+# Diseño de Base de Datos
+
+# Sistema de Seguimiento de Niños Tratados por Anemia
+
+**Versión:** 1.0
+
+**Dependencia:** PRD-001, PRD-002
+
+**Motor:** SQLite
+
+---
+
+# 1. Objetivo
+
+Definir la estructura de datos del sistema, relaciones entre entidades, reglas de integridad y diseño lógico de almacenamiento.
+
+---
+
+# 2. Principios de Diseño
+
+La base de datos debe cumplir:
+
+* Integridad referencial.
+* Evitar duplicidad de información.
+* Facilidad de consulta.
+* Escalabilidad.
+* Auditoría completa.
+* Compatibilidad futura con PostgreSQL.
+
+---
+
+# 3. Modelo Entidad-Relación
+
+```text
+PACIENTE
+│
+├── CONTROLES
+│
+├── TRATAMIENTOS
+│
+├── VISITAS
+│
+└── DOCUMENTOS
+
+USUARIOS
+│
+└── AUDITORIA
+```
+
+---
+
+# 4. Tabla Pacientes
+
+## Descripción
+
+Contiene la información principal de cada niño.
+
+---
+
+## Nombre
+
+```sql
+pacientes
+```
+
+---
+
+## Campos
+
+| Campo             | Tipo     | Obligatorio |
+| ----------------- | -------- | ----------- |
+| id                | INTEGER  | Sí          |
+| historia_clinica  | TEXT     | Sí          |
+| dni               | TEXT     | Sí          |
+| nombres           | TEXT     | Sí          |
+| apellido_paterno  | TEXT     | Sí          |
+| apellido_materno  | TEXT     | Sí          |
+| fecha_nacimiento  | DATE     | Sí          |
+| sexo              | TEXT     | Sí          |
+| direccion         | TEXT     | No          |
+| centro_poblado_id | INTEGER  | Sí          |
+| nombre_apoderado  | TEXT     | Sí          |
+| celular_apoderado | TEXT     | No          |
+| fecha_registro    | DATETIME | Sí          |
+| activo            | BOOLEAN  | Sí          |
+
+---
+
+## Restricciones
+
+### DNI único
+
+```sql
+UNIQUE(dni)
+```
+
+---
+
+## Historia Clínica única
+
+```sql
+UNIQUE(historia_clinica)
+```
+
+---
+
+# 5. Tabla Centros Poblados
+
+---
+
+## Nombre
+
+```sql
+centros_poblados
+```
+
+---
+
+## Campos
+
+| Campo        | Tipo    |
+| ------------ | ------- |
+| id           | INTEGER |
+| nombre       | TEXT    |
+| distrito     | TEXT    |
+| provincia    | TEXT    |
+| departamento | TEXT    |
+| activo       | BOOLEAN |
+
+---
+
+# 6. Tabla Usuarios
+
+---
+
+## Nombre
+
+```sql
+usuarios
+```
+
+---
+
+## Campos
+
+| Campo         | Tipo     |
+| ------------- | -------- |
+| id            | INTEGER  |
+| usuario       | TEXT     |
+| password_hash | TEXT     |
+| nombres       | TEXT     |
+| apellidos     | TEXT     |
+| rol_id        | INTEGER  |
+| activo        | BOOLEAN  |
+| creado_en     | DATETIME |
+
+---
+
+# 7. Tabla Roles
+
+---
+
+## Nombre
+
+```sql
+roles
+```
+
+---
+
+## Registros Iniciales
+
+| id | rol           |
+| -- | ------------- |
+| 1  | Administrador |
+| 2  | Supervisor    |
+| 3  | Operador      |
+| 4  | Consulta      |
+
+---
+
+# 8. Tabla Controles
+
+## Descripción
+
+Almacena todos los controles clínicos realizados al niño.
+
+---
+
+## Nombre
+
+```sql
+controles
+```
+
+---
+
+## Campos
+
+| Campo         | Tipo     |
+| ------------- | -------- |
+| id            | INTEGER  |
+| paciente_id   | INTEGER  |
+| fecha_control | DATE     |
+| edad_meses    | INTEGER  |
+| peso          | REAL     |
+| talla         | REAL     |
+| hemoglobina   | REAL     |
+| temperatura   | REAL     |
+| observaciones | TEXT     |
+| usuario_id    | INTEGER  |
+| creado_en     | DATETIME |
+
+---
+
+# 9. Reglas Clínicas
+
+## Clasificación de Hemoglobina
+
+### Normal
+
+```text
+>= 11.0
+```
+
+---
+
+### Anemia Leve
+
+```text
+10.0 - 10.9
+```
+
+---
+
+### Anemia Moderada
+
+```text
+7.0 - 9.9
+```
+
+---
+
+### Anemia Severa
+
+```text
+< 7.0
+```
+
+---
+
+# 10. Tabla Tratamientos
+
+---
+
+## Nombre
+
+```sql
+tratamientos
+```
+
+---
+
+## Campos
+
+| Campo          | Tipo    |
+| -------------- | ------- |
+| id             | INTEGER |
+| paciente_id    | INTEGER |
+| medicamento_id | INTEGER |
+| dosis          | TEXT    |
+| frecuencia     | TEXT    |
+| fecha_inicio   | DATE    |
+| fecha_fin      | DATE    |
+| estado         | TEXT    |
+| observaciones  | TEXT    |
+
+---
+
+# 11. Tabla Medicamentos
+
+---
+
+## Nombre
+
+```sql
+medicamentos
+```
+
+---
+
+## Registros Iniciales
+
+| id | Nombre               |
+| -- | -------------------- |
+| 1  | Sulfato Ferroso      |
+| 2  | Multimicronutrientes |
+| 3  | Hierro Polimaltosado |
+
+---
+
+# 12. Tabla Visitas Domiciliarias
+
+---
+
+## Nombre
+
+```sql
+visitas_domiciliarias
+```
+
+---
+
+## Campos
+
+| Campo         | Tipo    |
+| ------------- | ------- |
+| id            | INTEGER |
+| paciente_id   | INTEGER |
+| fecha_visita  | DATE    |
+| responsable   | TEXT    |
+| resultado     | TEXT    |
+| observaciones | TEXT    |
+
+---
+
+# 13. Tabla Alertas
+
+---
+
+## Nombre
+
+```sql
+alertas
+```
+
+---
+
+## Campos
+
+| Campo          | Tipo     |
+| -------------- | -------- |
+| id             | INTEGER  |
+| paciente_id    | INTEGER  |
+| tipo           | TEXT     |
+| descripcion    | TEXT     |
+| fecha_generada | DATETIME |
+| resuelta       | BOOLEAN  |
+
+---
+
+# 14. Tipos de Alertas
+
+## Control Vencido
+
+Paciente sin control por más de 30 días.
+
+---
+
+## Hemoglobina Crítica
+
+Hemoglobina menor a 7.
+
+---
+
+## Tratamiento Vencido
+
+Fecha de fin superada.
+
+---
+
+## Datos Incompletos
+
+Falta información obligatoria.
+
+---
+
+# 15. Tabla Auditoría
+
+---
+
+## Nombre
+
+```sql
+audit_log
+```
+
+---
+
+## Campos
+
+| Campo            | Tipo     |
+| ---------------- | -------- |
+| id               | INTEGER  |
+| usuario_id       | INTEGER  |
+| accion           | TEXT     |
+| tabla_afectada   | TEXT     |
+| registro_id      | INTEGER  |
+| datos_anteriores | TEXT     |
+| datos_nuevos     | TEXT     |
+| fecha            | DATETIME |
+
+---
+
+# 16. Tabla Backups
+
+---
+
+## Nombre
+
+```sql
+backup_history
+```
+
+---
+
+## Campos
+
+| Campo            | Tipo     |
+| ---------------- | -------- |
+| id               | INTEGER  |
+| nombre_archivo   | TEXT     |
+| tamaño_mb        | REAL     |
+| fecha_generacion | DATETIME |
+| resultado        | TEXT     |
+
+---
+
+# 17. Índices
+
+## Pacientes
+
+```sql
+CREATE INDEX idx_paciente_dni
+ON pacientes(dni);
+```
+
+---
+
+```sql
+CREATE INDEX idx_paciente_historia
+ON pacientes(historia_clinica);
+```
+
+---
+
+# 18. Índices de Controles
+
+```sql
+CREATE INDEX idx_control_fecha
+ON controles(fecha_control);
+```
+
+---
+
+```sql
+CREATE INDEX idx_control_paciente
+ON controles(paciente_id);
+```
+
+---
+
+# 19. Índices de Tratamientos
+
+```sql
+CREATE INDEX idx_tratamiento_paciente
+ON tratamientos(paciente_id);
+```
+
+---
+
+# 20. Integridad Referencial
+
+```text
+PACIENTES
+    │
+    ├── CONTROLES
+    │
+    ├── TRATAMIENTOS
+    │
+    ├── VISITAS_DOMICILIARIAS
+    │
+    └── ALERTAS
+```
+
+---
+
+# 21. Eliminación Lógica
+
+Ningún registro clínico será eliminado físicamente.
+
+---
+
+## Campo Estándar
+
+```sql
+activo BOOLEAN DEFAULT 1
+```
+
+---
+
+# 22. Campos de Auditoría Globales
+
+Todas las tablas principales deberán incluir:
+
+```sql
+creado_en
+actualizado_en
+creado_por
+actualizado_por
+activo
+```
+
+---
+
+# 23. Proyección de Crecimiento
+
+## Año 1
+
+5,000 pacientes
+
+---
+
+## Año 3
+
+15,000 pacientes
+
+---
+
+## Año 5
+
+30,000 pacientes
+
+---
+
+SQLite soporta ampliamente este volumen.
+
+---
+
+# 24. Estrategia de Migración
+
+Todas las modificaciones deberán implementarse mediante migraciones versionadas.
+
+Ejemplo:
+
+```text
+migrations/
+
+001_create_users.sql
+
+002_create_patients.sql
+
+003_create_controls.sql
+
+004_create_treatments.sql
+```
+
+---
+
+# 25. Validaciones Críticas
+
+## DNI
+
+8 dígitos.
+
+---
+
+## Historia Clínica
+
+No duplicada.
+
+---
+
+## Hemoglobina
+
+Rango válido:
+
+```text
+0.0 - 25.0
+```
+
+---
+
+## Peso
+
+Mayor que cero.
+
+---
+
+## Talla
+
+Mayor que cero.
+
+---
+
+# 26. Criterios de Aceptación
+
+* Todas las relaciones implementadas.
+* Índices creados.
+* Restricciones activas.
+* Integridad referencial validada.
+* Auditoría funcional.
+* Soft delete funcional.
+* Migraciones funcionales.
+
+FIN DEL DOCUMENTO

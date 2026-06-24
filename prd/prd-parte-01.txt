@@ -1,0 +1,406 @@
+PRD-001
+Sistema de Seguimiento de Niños Tratados por Anemia
+
+Versión: 1.0
+
+Estado: Borrador Inicial
+
+Fecha: Junio 2026
+
+1. Resumen Ejecutivo
+1.1 Descripción General
+
+El Sistema de Seguimiento de Niños Tratados por Anemia es una aplicación de escritorio diseñada para registrar, monitorear y analizar la evolución clínica de niños diagnosticados con anemia.
+
+El sistema permitirá almacenar información demográfica, controles clínicos, tratamientos, visitas de seguimiento y reportes estadísticos, proporcionando una herramienta confiable para establecimientos de salud, municipalidades y programas sociales.
+
+La aplicación funcionará en red local y estará diseñada para múltiples usuarios concurrentes utilizando una base de datos SQLite centralizada con mecanismos automáticos de respaldo.
+
+1.2 Problema Actual
+
+Actualmente gran parte del seguimiento de pacientes se realiza mediante:
+
+Registros físicos.
+Hojas de cálculo.
+Bases de datos dispersas.
+Información duplicada.
+Reportes manuales.
+
+Esto genera:
+
+Pérdida de información.
+Errores de digitación.
+Dificultad para realizar seguimiento.
+Dificultad para generar indicadores.
+Riesgo de incumplimiento de controles.
+1.3 Solución Propuesta
+
+Desarrollar una aplicación de escritorio moderna que permita:
+
+Registro centralizado de pacientes.
+Seguimiento longitudinal.
+Control de tratamientos.
+Generación de reportes.
+Gestión de usuarios.
+Auditoría de cambios.
+Copias de seguridad automáticas.
+2. Objetivos
+2.1 Objetivo General
+
+Implementar una plataforma integral para el seguimiento clínico y administrativo de niños tratados por anemia.
+
+2.2 Objetivos Específicos
+OE-01
+
+Registrar información completa de los pacientes.
+
+OE-02
+
+Registrar controles médicos periódicos.
+
+OE-03
+
+Registrar tratamientos prescritos.
+
+OE-04
+
+Monitorear la evolución de hemoglobina.
+
+OE-05
+
+Identificar pacientes con riesgo clínico.
+
+OE-06
+
+Generar reportes automáticos.
+
+OE-07
+
+Reducir errores de digitación.
+
+OE-08
+
+Garantizar la integridad de la información.
+
+OE-09
+
+Implementar copias de seguridad automáticas.
+
+OE-10
+
+Permitir acceso multiusuario.
+
+3. Alcance
+3.1 Incluido en la Primera Versión
+Gestión de Pacientes
+Registro de pacientes.
+Edición de información.
+Búsqueda avanzada.
+Historial clínico.
+Gestión de Controles
+Registro de controles.
+Registro de hemoglobina.
+Peso.
+Talla.
+Observaciones.
+Gestión de Tratamientos
+Registro de medicamentos.
+Fecha de inicio.
+Fecha de fin.
+Estado del tratamiento.
+Dashboard
+Indicadores generales.
+Estadísticas básicas.
+Alertas.
+Reportes
+PDF.
+Excel.
+Impresión.
+Seguridad
+Usuarios.
+Roles.
+Contraseñas.
+Respaldo
+Backups automáticos.
+Restauración de copias.
+3.2 Fuera del Alcance
+
+La primera versión NO incluirá:
+
+Aplicación móvil.
+Geolocalización.
+Integración con RENIEC.
+Integración con HIS.
+Integración con sistemas regionales.
+Firma digital.
+Mensajería SMS.
+Notificaciones por WhatsApp.
+4. Usuarios del Sistema
+4.1 Administrador
+
+Responsable de la configuración general.
+
+Funciones
+Crear usuarios.
+Gestionar permisos.
+Restaurar backups.
+Ver auditoría.
+4.2 Personal de Salud
+
+Responsable de registrar información clínica.
+
+Funciones
+Registrar pacientes.
+Registrar controles.
+Registrar tratamientos.
+Generar reportes.
+4.3 Consulta
+
+Usuario con acceso limitado.
+
+Funciones
+Visualizar información.
+Generar reportes.
+
+No puede:
+
+Crear registros.
+Modificar registros.
+Eliminar registros.
+5. Casos de Uso
+CU-01 Registrar Paciente
+Actor
+
+Personal de Salud
+
+Flujo Principal
+Abrir módulo Pacientes.
+Seleccionar Nuevo Paciente.
+Ingresar información.
+Validar datos.
+Guardar registro.
+Resultado
+
+Paciente registrado exitosamente.
+
+CU-02 Registrar Control
+Actor
+
+Personal de Salud
+
+Flujo Principal
+Buscar paciente.
+Abrir historial.
+Crear nuevo control.
+Registrar datos clínicos.
+Guardar.
+Resultado
+
+Control agregado al historial.
+
+CU-03 Registrar Tratamiento
+Actor
+
+Personal de Salud
+
+Flujo Principal
+Buscar paciente.
+Crear tratamiento.
+Registrar medicamento.
+Registrar dosis.
+Guardar.
+Resultado
+
+Tratamiento activo registrado.
+
+CU-04 Generar Reporte
+Actor
+
+Personal de Salud
+
+Flujo Principal
+Seleccionar reporte.
+Definir filtros.
+Generar documento.
+Resultado
+
+PDF o Excel generado.
+
+CU-05 Restaurar Backup
+Actor
+
+Administrador
+
+Flujo Principal
+Abrir configuración.
+Seleccionar respaldo.
+Confirmar restauración.
+Resultado
+
+Base de datos restaurada.
+
+6. Requerimientos Funcionales
+RF-001
+
+El sistema deberá permitir registrar pacientes.
+
+RF-002
+
+El sistema deberá validar documentos duplicados.
+
+RF-003
+
+El sistema deberá calcular automáticamente la edad.
+
+RF-004
+
+El sistema deberá permitir registrar múltiples controles por paciente.
+
+RF-005
+
+El sistema deberá almacenar resultados históricos de hemoglobina.
+
+RF-006
+
+El sistema deberá mostrar la evolución cronológica del paciente.
+
+RF-007
+
+El sistema deberá permitir registrar tratamientos.
+
+RF-008
+
+El sistema deberá permitir finalizar tratamientos.
+
+RF-009
+
+El sistema deberá generar reportes PDF.
+
+RF-010
+
+El sistema deberá exportar información a Excel.
+
+RF-011
+
+El sistema deberá permitir búsquedas rápidas.
+
+RF-012
+
+El sistema deberá registrar fecha y hora de cada modificación.
+
+RF-013
+
+El sistema deberá registrar el usuario que realizó cada cambio.
+
+RF-014
+
+El sistema deberá generar copias de seguridad automáticas.
+
+RF-015
+
+El sistema deberá restaurar respaldos anteriores.
+
+RF-016
+
+El sistema deberá soportar múltiples usuarios.
+
+RF-017
+
+El sistema deberá implementar autenticación mediante usuario y contraseña.
+
+RF-018
+
+El sistema deberá bloquear accesos no autorizados.
+
+7. Requerimientos No Funcionales
+RNF-001 Rendimiento
+
+El tiempo de respuesta no deberá superar 2 segundos en operaciones normales.
+
+RNF-002 Disponibilidad
+
+La aplicación deberá estar disponible durante toda la jornada laboral.
+
+RNF-003 Seguridad
+
+Las contraseñas deberán almacenarse utilizando hash seguro.
+
+RNF-004 Integridad
+
+No deberá permitirse la eliminación accidental de datos relacionados.
+
+RNF-005 Usabilidad
+
+La interfaz deberá ser intuitiva para personal sin conocimientos técnicos.
+
+RNF-006 Mantenibilidad
+
+La arquitectura deberá permitir futuras ampliaciones.
+
+RNF-007 Escalabilidad
+
+El sistema deberá soportar crecimiento progresivo de información durante varios años.
+
+RNF-008 Compatibilidad
+
+Compatible con:
+
+Windows 10
+Windows 11
+RNF-009 Respaldo
+
+La aplicación deberá generar copias automáticas diarias.
+
+RNF-010 Auditoría
+
+Toda modificación deberá quedar registrada.
+
+8. Indicadores de Éxito
+Operativos
+100% de pacientes registrados digitalmente.
+Reducción de registros duplicados.
+Reducción de errores manuales.
+Clínicos
+Seguimiento oportuno.
+Identificación de pacientes críticos.
+Mejor control de tratamientos.
+Técnicos
+Tiempo de respuesta menor a 2 segundos.
+Disponibilidad superior al 99%.
+Restauración exitosa desde backups.
+9. Riesgos Identificados
+Riesgo 1
+
+Pérdida de información por falla de hardware.
+
+Mitigación
+
+Backups automáticos.
+
+Riesgo 2
+
+Acceso no autorizado.
+
+Mitigación
+
+Roles y permisos.
+
+Riesgo 3
+
+Datos duplicados.
+
+Mitigación
+
+Validaciones automáticas.
+
+Riesgo 4
+
+Corrupción de base de datos.
+
+Mitigación
+
+Copias de seguridad periódicas y verificación de integridad.
+
+10. Aprobación del Documento
+
+Este documento establece los requisitos funcionales y operativos de la primera versión del Sistema de Seguimiento de Niños Tratados por Anemia y servirá como base para las fases de diseño técnico, desarrollo, pruebas y despliegue.

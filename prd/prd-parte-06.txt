@@ -1,0 +1,993 @@
+# PRD-006
+
+# Roadmap de Desarrollo, Testing, DevOps y Despliegue
+
+# Sistema de Seguimiento de Niños Tratados por Anemia
+
+**Versión:** 1.0
+
+**Dependencias:**
+
+* PRD-001
+* PRD-002
+* PRD-003
+* PRD-004
+* PRD-005
+
+---
+
+# 1. Objetivo
+
+Definir la estrategia de construcción del sistema desde la fase inicial hasta la puesta en producción.
+
+Este documento servirá como guía para:
+
+* Desarrollo.
+* Control de calidad.
+* Gestión de versiones.
+* Despliegue.
+* Mantenimiento.
+* Actualizaciones.
+
+---
+
+# 2. Metodología
+
+Se utilizará una metodología ágil basada en Scrum.
+
+---
+
+## Duración del Sprint
+
+```text
+2 semanas
+```
+
+---
+
+## Entregables
+
+Cada sprint deberá producir:
+
+* Funcionalidad operativa.
+* Pruebas.
+* Documentación.
+* Migraciones.
+
+---
+
+# 3. Roadmap General
+
+## Fase 0
+
+Preparación del Proyecto
+
+Duración:
+
+```text
+1 semana
+```
+
+---
+
+## Fase 1
+
+Infraestructura Base
+
+Duración:
+
+```text
+2 semanas
+```
+
+---
+
+## Fase 2
+
+Autenticación y Seguridad
+
+Duración:
+
+```text
+2 semanas
+```
+
+---
+
+## Fase 3
+
+Gestión de Pacientes
+
+Duración:
+
+```text
+3 semanas
+```
+
+---
+
+## Fase 4
+
+Controles Clínicos
+
+Duración:
+
+```text
+3 semanas
+```
+
+---
+
+## Fase 5
+
+Tratamientos
+
+Duración:
+
+```text
+2 semanas
+```
+
+---
+
+## Fase 6
+
+Dashboard
+
+Duración:
+
+```text
+2 semanas
+```
+
+---
+
+## Fase 7
+
+Reportes
+
+Duración:
+
+```text
+2 semanas
+```
+
+---
+
+## Fase 8
+
+Backups y Auditoría
+
+Duración:
+
+```text
+2 semanas
+```
+
+---
+
+## Fase 9
+
+Pruebas Finales
+
+Duración:
+
+```text
+2 semanas
+```
+
+---
+
+## Fase 10
+
+Despliegue
+
+Duración:
+
+```text
+1 semana
+```
+
+---
+
+# 4. Sprint 0
+
+## Objetivo
+
+Preparar el entorno de desarrollo.
+
+---
+
+## Tareas
+
+### Crear repositorio
+
+```text
+github.com/organizacion/anemia-system
+```
+
+---
+
+### Configurar Tauri
+
+---
+
+### Configurar React
+
+---
+
+### Configurar TypeScript
+
+---
+
+### Configurar Tailwind
+
+---
+
+### Configurar SQLite
+
+---
+
+### Configurar SQLx
+
+---
+
+### Configurar ESLint
+
+---
+
+### Configurar Prettier
+
+---
+
+### Configurar Husky
+
+---
+
+## Resultado
+
+Proyecto compilando correctamente.
+
+---
+
+# 5. Sprint 1
+
+Infraestructura Base
+
+---
+
+## Objetivos
+
+Construir la arquitectura principal.
+
+---
+
+## Entregables
+
+### Estructura Frontend
+
+```text
+src/
+```
+
+---
+
+### Estructura Backend
+
+```text
+src-tauri/
+```
+
+---
+
+### Sistema de configuración
+
+---
+
+### Logger
+
+---
+
+### Migraciones
+
+---
+
+### Conexión SQLite
+
+---
+
+## Resultado
+
+Base técnica funcional.
+
+---
+
+# 6. Sprint 2
+
+Autenticación
+
+---
+
+## Funcionalidades
+
+### Login
+
+### Logout
+
+### Roles
+
+### Permisos
+
+### Hash Argon2
+
+### Sesiones
+
+---
+
+## Resultado
+
+Usuarios autenticados.
+
+---
+
+# 7. Sprint 3
+
+Pacientes
+
+---
+
+## Funcionalidades
+
+### Crear paciente
+
+### Editar paciente
+
+### Buscar paciente
+
+### Historial
+
+### Validaciones
+
+---
+
+## Resultado
+
+Gestión completa de pacientes.
+
+---
+
+# 8. Sprint 4
+
+Controles Clínicos
+
+---
+
+## Funcionalidades
+
+### Registrar control
+
+### Editar control
+
+### Clasificación anemia
+
+### Historial clínico
+
+### Evolución hemoglobina
+
+---
+
+## Resultado
+
+Seguimiento clínico funcional.
+
+---
+
+# 9. Sprint 5
+
+Tratamientos
+
+---
+
+## Funcionalidades
+
+### Crear tratamiento
+
+### Actualizar tratamiento
+
+### Finalizar tratamiento
+
+### Tratamientos activos
+
+---
+
+## Resultado
+
+Gestión completa de tratamientos.
+
+---
+
+# 10. Sprint 6
+
+Dashboard
+
+---
+
+## Funcionalidades
+
+### KPIs
+
+### Indicadores
+
+### Gráficos
+
+### Alertas rápidas
+
+---
+
+## Resultado
+
+Panel ejecutivo operativo.
+
+---
+
+# 11. Sprint 7
+
+Reportes
+
+---
+
+## Funcionalidades
+
+### PDF
+
+### Excel
+
+### CSV
+
+### Impresión
+
+---
+
+## Resultado
+
+Reportes exportables.
+
+---
+
+# 12. Sprint 8
+
+Backups
+
+---
+
+## Funcionalidades
+
+### Backup manual
+
+### Backup automático
+
+### Restauración
+
+### Historial
+
+---
+
+## Resultado
+
+Protección de datos completa.
+
+---
+
+# 13. Sprint 9
+
+Auditoría
+
+---
+
+## Funcionalidades
+
+### Registro de eventos
+
+### Historial cambios
+
+### Trazabilidad
+
+---
+
+## Resultado
+
+Auditoría completa.
+
+---
+
+# 14. Sprint 10
+
+Hardening
+
+---
+
+## Objetivos
+
+Preparar producción.
+
+---
+
+## Actividades
+
+### Optimización consultas
+
+### Optimización UI
+
+### Validaciones finales
+
+### Manejo errores
+
+### Revisión seguridad
+
+---
+
+# 15. Estrategia Git
+
+## Modelo
+
+Git Flow simplificado.
+
+---
+
+## Ramas
+
+```text
+main
+develop
+feature/*
+hotfix/*
+release/*
+```
+
+---
+
+# 16. Flujo Git
+
+```text
+feature
+
+↓
+
+develop
+
+↓
+
+release
+
+↓
+
+main
+```
+
+---
+
+# 17. Convención de Commits
+
+Formato:
+
+```text
+tipo(scope): descripción
+```
+
+---
+
+Ejemplos:
+
+```text
+feat(patient): crear registro pacientes
+
+fix(auth): corregir validación login
+
+refactor(reports): optimizar exportación
+```
+
+---
+
+# 18. CI/CD
+
+## Pipeline
+
+```text
+Push
+
+↓
+
+Build
+
+↓
+
+Lint
+
+↓
+
+Tests
+
+↓
+
+Package
+
+↓
+
+Release
+```
+
+---
+
+# 19. GitHub Actions
+
+Jobs:
+
+### Lint
+
+### Build Frontend
+
+### Build Rust
+
+### Unit Tests
+
+### Integration Tests
+
+### Package Installer
+
+---
+
+# 20. Calidad de Código
+
+## Frontend
+
+### ESLint
+
+### Prettier
+
+### TypeScript Strict Mode
+
+---
+
+## Backend
+
+### Clippy
+
+### Rustfmt
+
+---
+
+# 21. Cobertura de Pruebas
+
+Objetivo mínimo:
+
+```text
+80%
+```
+
+---
+
+Objetivo ideal:
+
+```text
+90%
+```
+
+---
+
+# 22. Tipos de Pruebas
+
+## Unitarias
+
+Servicios.
+
+Repositorios.
+
+Validaciones.
+
+---
+
+## Integración
+
+SQLite.
+
+Commands.
+
+Auditoría.
+
+---
+
+## E2E
+
+Flujo completo.
+
+---
+
+# 23. Escenarios E2E
+
+### Crear paciente
+
+### Crear control
+
+### Crear tratamiento
+
+### Generar reporte
+
+### Crear backup
+
+### Restaurar backup
+
+---
+
+# 24. Gestión de Errores
+
+Categorías:
+
+```text
+VALIDATION_ERROR
+
+AUTH_ERROR
+
+DATABASE_ERROR
+
+SYSTEM_ERROR
+
+BACKUP_ERROR
+```
+
+---
+
+# 25. Logs
+
+## Producción
+
+```text
+logs/
+```
+
+---
+
+Archivos:
+
+```text
+application.log
+
+security.log
+
+backup.log
+
+error.log
+```
+
+---
+
+# 26. Instalador
+
+Formato:
+
+```text
+MSI
+```
+
+---
+
+## Contenido
+
+```text
+Aplicación
+
+Base SQLite
+
+Configuración
+
+Directorio Backups
+
+Directorio Logs
+```
+
+---
+
+# 27. Actualizaciones
+
+## Estrategia
+
+Actualizaciones incrementales.
+
+---
+
+## Requisitos
+
+No modificar:
+
+```text
+anemia.db
+```
+
+---
+
+Solo actualizar:
+
+```text
+ejecutable
+
+frontend
+
+assets
+```
+
+---
+
+# 28. Estrategia de Respaldo
+
+Automática.
+
+---
+
+## Frecuencia
+
+Diaria.
+
+---
+
+## Retención
+
+### Diarios
+
+30
+
+### Semanales
+
+12
+
+### Mensuales
+
+24
+
+---
+
+# 29. Entorno de Producción
+
+## Servidor de Archivos
+
+```text
+Windows 10/11
+```
+
+---
+
+## Clientes
+
+```text
+Windows 10
+
+Windows 11
+```
+
+---
+
+## Red
+
+LAN
+
+1 Gbps recomendada
+
+---
+
+# 30. Monitoreo
+
+Indicadores:
+
+### Tiempo respuesta
+
+### Uso memoria
+
+### Errores
+
+### Tamaño BD
+
+### Backups
+
+---
+
+# 31. Gestión de Riesgos
+
+## Riesgo
+
+Corrupción SQLite.
+
+### Mitigación
+
+WAL Mode.
+
+Backups.
+
+---
+
+## Riesgo
+
+Pérdida hardware.
+
+### Mitigación
+
+Copias externas.
+
+---
+
+## Riesgo
+
+Acceso indebido.
+
+### Mitigación
+
+Roles.
+
+Auditoría.
+
+---
+
+# 32. Checklist Pre-Producción
+
+* Base estable.
+* Migraciones probadas.
+* Usuarios creados.
+* Backups verificados.
+* Auditoría operativa.
+* Reportes funcionales.
+* Instalador validado.
+
+---
+
+# 33. Checklist Post-Producción
+
+* Verificar logs.
+* Verificar backups.
+* Verificar rendimiento.
+* Verificar auditoría.
+* Verificar reportes.
+
+---
+
+# 34. Cronograma Estimado
+
+| Fase            | Semanas |
+| --------------- | ------- |
+| Preparación     | 1       |
+| Infraestructura | 2       |
+| Seguridad       | 2       |
+| Pacientes       | 3       |
+| Controles       | 3       |
+| Tratamientos    | 2       |
+| Dashboard       | 2       |
+| Reportes        | 2       |
+| Backups         | 2       |
+| QA              | 2       |
+| Despliegue      | 1       |
+
+---
+
+## Total
+
+```text
+20 semanas
+```
+
+Aproximadamente:
+
+```text
+5 meses
+```
+
+para una versión 1.0 sólida y lista para producción.
+
+---
+
+# 35. Criterios de Éxito
+
+* Sistema estable.
+* Multiusuario funcional.
+* Backups automáticos.
+* Reportes correctos.
+* Auditoría completa.
+* Tiempo de respuesta aceptable.
+* Facilidad de uso para personal de salud.
+
+FIN DEL DOCUMENTO

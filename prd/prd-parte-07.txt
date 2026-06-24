@@ -1,0 +1,866 @@
+# PRD-007
+
+# Especificación Funcional Completa de Módulos
+
+# Sistema de Seguimiento de Niños Tratados por Anemia
+
+**Versión:** 1.0
+
+**Dependencias:**
+
+* PRD-001
+* PRD-002
+* PRD-003
+* PRD-004
+* PRD-005
+* PRD-006
+
+---
+
+# 1. Objetivo
+
+Definir detalladamente el comportamiento funcional de cada módulo del sistema.
+
+Este documento elimina ambigüedades durante el desarrollo y servirá como referencia para QA, desarrollo y futuras ampliaciones.
+
+---
+
+# 2. Matriz de Roles
+
+| Acción                | Administrador | Supervisor | Operador | Consulta |
+| --------------------- | ------------- | ---------- | -------- | -------- |
+| Ver Dashboard         | Sí            | Sí         | Sí       | Sí       |
+| Crear Paciente        | Sí            | No         | Sí       | No       |
+| Editar Paciente       | Sí            | No         | Sí       | No       |
+| Ver Paciente          | Sí            | Sí         | Sí       | Sí       |
+| Registrar Control     | Sí            | No         | Sí       | No       |
+| Registrar Tratamiento | Sí            | No         | Sí       | No       |
+| Generar Reportes      | Sí            | Sí         | Sí       | Sí       |
+| Administrar Usuarios  | Sí            | No         | No       | No       |
+| Restaurar Backup      | Sí            | No         | No       | No       |
+| Ver Auditoría         | Sí            | Sí         | No       | No       |
+
+---
+
+# 3. Módulo de Autenticación
+
+---
+
+## Pantalla Login
+
+### Campos
+
+#### Usuario
+
+Tipo:
+
+```text id="j2m4x1"
+Texto
+```
+
+Obligatorio:
+
+```text id="q3f8w9"
+Sí
+```
+
+Longitud:
+
+```text id="a6h1r2"
+3-50 caracteres
+```
+
+---
+
+#### Contraseña
+
+Tipo:
+
+```text id="m8d7v5"
+Password
+```
+
+Obligatorio:
+
+```text id="r4y2p8"
+Sí
+```
+
+---
+
+### Botones
+
+#### Iniciar Sesión
+
+Acción:
+
+* Validar usuario.
+* Validar contraseña.
+* Crear sesión.
+
+---
+
+### Mensajes
+
+#### Usuario Incorrecto
+
+```text id="u1g6t4"
+Usuario no encontrado.
+```
+
+---
+
+#### Contraseña Incorrecta
+
+```text id="p9k5s3"
+Contraseña incorrecta.
+```
+
+---
+
+# 4. Módulo Pacientes
+
+---
+
+## Pantalla Lista de Pacientes
+
+### Componentes
+
+#### Barra de búsqueda
+
+Permite buscar por:
+
+* DNI
+* Historia clínica
+* Nombres
+* Apellidos
+
+---
+
+#### Tabla
+
+Columnas:
+
+* Historia Clínica
+* DNI
+* Nombres
+* Edad
+* Centro Poblado
+* Estado
+
+---
+
+### Botones
+
+#### Nuevo Paciente
+
+Abre formulario.
+
+---
+
+#### Ver Historial
+
+Abre expediente completo.
+
+---
+
+#### Editar
+
+Abre formulario edición.
+
+---
+
+# 5. Formulario Nuevo Paciente
+
+---
+
+## Datos Generales
+
+### Historia Clínica
+
+Obligatorio:
+
+Sí
+
+Validación:
+
+No duplicada.
+
+---
+
+### DNI
+
+Obligatorio:
+
+Sí
+
+Validación:
+
+```text id="w7b4n1"
+8 dígitos
+```
+
+---
+
+### Nombres
+
+Obligatorio:
+
+Sí
+
+---
+
+### Apellido Paterno
+
+Obligatorio:
+
+Sí
+
+---
+
+### Apellido Materno
+
+Obligatorio:
+
+Sí
+
+---
+
+### Fecha Nacimiento
+
+Obligatorio:
+
+Sí
+
+---
+
+### Edad
+
+Calculada automáticamente.
+
+No editable.
+
+---
+
+### Sexo
+
+Opciones:
+
+```text id="v3r8m6"
+Masculino
+
+Femenino
+```
+
+---
+
+### Centro Poblado
+
+Lista desplegable.
+
+---
+
+### Apoderado
+
+Obligatorio:
+
+Sí
+
+---
+
+### Celular
+
+Opcional.
+
+Validación:
+
+```text id="n4x9q2"
+9 dígitos
+```
+
+---
+
+### Botón Guardar
+
+Acciones:
+
+* Validar datos.
+* Guardar paciente.
+* Registrar auditoría.
+
+---
+
+# 6. Historial del Paciente
+
+---
+
+## Secciones
+
+### Datos Generales
+
+---
+
+### Controles
+
+---
+
+### Tratamientos
+
+---
+
+### Visitas
+
+---
+
+### Alertas
+
+---
+
+### Documentos
+
+---
+
+# 7. Módulo Controles
+
+---
+
+## Formulario Nuevo Control
+
+### Fecha
+
+Obligatorio.
+
+No futura.
+
+---
+
+### Peso
+
+Tipo:
+
+Decimal
+
+Validación:
+
+Mayor que cero.
+
+---
+
+### Talla
+
+Tipo:
+
+Decimal
+
+Validación:
+
+Mayor que cero.
+
+---
+
+### Hemoglobina
+
+Tipo:
+
+Decimal
+
+Validación:
+
+```text id="f2k7h5"
+0 - 25
+```
+
+---
+
+### Temperatura
+
+Opcional.
+
+---
+
+### Observaciones
+
+Opcional.
+
+Máximo:
+
+```text id="y5m1v8"
+2000 caracteres
+```
+
+---
+
+### Guardar
+
+Acciones:
+
+* Validar.
+* Clasificar anemia.
+* Registrar control.
+
+---
+
+# 8. Clasificación Automática
+
+---
+
+## Normal
+
+```text id="e8t4c6"
+>= 11.0
+```
+
+---
+
+## Leve
+
+```text id="g1n9w7"
+10.0 - 10.9
+```
+
+---
+
+## Moderada
+
+```text id="s3x6b2"
+7.0 - 9.9
+```
+
+---
+
+## Severa
+
+```text id="l7q4p9"
+< 7.0
+```
+
+---
+
+## Resultado Visual
+
+### Verde
+
+Normal
+
+---
+
+### Amarillo
+
+Leve
+
+---
+
+### Naranja
+
+Moderada
+
+---
+
+### Rojo
+
+Severa
+
+---
+
+# 9. Módulo Tratamientos
+
+---
+
+## Formulario
+
+### Medicamento
+
+Lista desplegable.
+
+---
+
+### Dosis
+
+Texto.
+
+Obligatorio.
+
+---
+
+### Frecuencia
+
+Texto.
+
+Obligatorio.
+
+---
+
+### Fecha Inicio
+
+Obligatorio.
+
+---
+
+### Fecha Fin
+
+Opcional.
+
+---
+
+### Observaciones
+
+Opcional.
+
+---
+
+# 10. Estados del Tratamiento
+
+---
+
+## Activo
+
+Tratamiento vigente.
+
+---
+
+## Finalizado
+
+Tratamiento concluido.
+
+---
+
+## Suspendido
+
+Interrumpido.
+
+---
+
+# 11. Módulo Alertas
+
+---
+
+## Alertas Automáticas
+
+### Control Vencido
+
+Más de:
+
+```text id="d5p7j1"
+30 días
+```
+
+sin control.
+
+---
+
+### Hemoglobina Crítica
+
+Menor a:
+
+```text id="c9m2r4"
+7.0
+```
+
+---
+
+### Tratamiento Vencido
+
+Fecha superada.
+
+---
+
+### Datos Incompletos
+
+Campos obligatorios faltantes.
+
+---
+
+# 12. Dashboard
+
+---
+
+## Indicadores
+
+### Pacientes Totales
+
+---
+
+### Controles del Mes
+
+---
+
+### Tratamientos Activos
+
+---
+
+### Alertas Pendientes
+
+---
+
+### Casos Severos
+
+---
+
+# 13. Gráficos
+
+---
+
+## Evolución Mensual
+
+Hemoglobina.
+
+---
+
+## Distribución
+
+* Normal
+* Leve
+* Moderada
+* Severa
+
+---
+
+# 14. Módulo Reportes
+
+---
+
+## Reporte Pacientes
+
+Filtros:
+
+* Fecha.
+* Centro poblado.
+* Estado.
+
+---
+
+## Reporte Controles
+
+Filtros:
+
+* Fecha.
+* Nivel anemia.
+
+---
+
+## Reporte Tratamientos
+
+Filtros:
+
+* Activos.
+* Finalizados.
+
+---
+
+## Reporte Alertas
+
+Filtros:
+
+* Tipo.
+* Fecha.
+
+---
+
+# 15. Exportaciones
+
+---
+
+## PDF
+
+---
+
+## Excel
+
+---
+
+## CSV
+
+---
+
+# 16. Módulo Usuarios
+
+---
+
+## Crear Usuario
+
+Campos:
+
+* Usuario
+* Nombres
+* Apellidos
+* Rol
+* Contraseña
+
+---
+
+## Restricciones
+
+Usuario único.
+
+---
+
+## Cambio Contraseña
+
+Permitido.
+
+---
+
+## Desactivar Usuario
+
+No elimina información.
+
+---
+
+# 17. Módulo Auditoría
+
+---
+
+## Registro
+
+Mostrar:
+
+* Fecha
+* Usuario
+* Acción
+* Tabla
+* Registro
+
+---
+
+## Filtros
+
+* Usuario
+* Fecha
+* Acción
+
+---
+
+# 18. Módulo Backups
+
+---
+
+## Crear Backup
+
+Manual.
+
+---
+
+## Restaurar Backup
+
+Solo administrador.
+
+---
+
+## Historial
+
+Mostrar:
+
+* Fecha
+* Tamaño
+* Estado
+
+---
+
+# 19. Mensajes Globales
+
+---
+
+## Guardado Exitoso
+
+```text id="k8v3j7"
+Registro guardado correctamente.
+```
+
+---
+
+## Actualización Exitosa
+
+```text id="b2r5n4"
+Información actualizada correctamente.
+```
+
+---
+
+## Error Validación
+
+```text id="x7m1p8"
+Verifique los datos ingresados.
+```
+
+---
+
+## Error Sistema
+
+```text id="z4t6c2"
+Ha ocurrido un error inesperado.
+```
+
+---
+
+# 20. Reglas de Auditoría
+
+Registrar:
+
+* Creación.
+* Modificación.
+* Desactivación.
+* Restauración.
+* Login.
+* Logout.
+
+---
+
+# 21. Accesibilidad
+
+Todos los formularios deberán:
+
+* Navegarse con teclado.
+* Mostrar mensajes claros.
+* Mantener contraste adecuado.
+
+---
+
+# 22. Rendimiento Esperado
+
+Búsqueda:
+
+```text id="r5w9k1"
+< 1 segundo
+```
+
+---
+
+Guardar:
+
+```text id="h2p7v6"
+< 2 segundos
+```
+
+---
+
+Generar Reporte:
+
+```text id="m8c4q3"
+< 10 segundos
+```
+
+---
+
+# 23. Criterios de Aceptación
+
+* Todas las validaciones implementadas.
+* Todos los permisos aplicados.
+* Todos los mensajes definidos.
+* Todos los formularios funcionales.
+* Todos los reportes exportables.
+* Todas las alertas operativas.
+
+---
+
+# 24. Definición de Completado (Definition of Done)
+
+Una funcionalidad se considera terminada cuando:
+
+* Código implementado.
+* Pruebas unitarias aprobadas.
+* Pruebas de integración aprobadas.
+* Auditoría registrada.
+* Documentación actualizada.
+* Revisada por QA.
+
+FIN DEL DOCUMENTO

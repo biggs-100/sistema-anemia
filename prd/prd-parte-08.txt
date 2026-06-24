@@ -1,0 +1,518 @@
+PRD-008
+Low Level Design (LLD)
+Sistema de Seguimiento de Niños Tratados por Anemia
+
+Versión: 1.0
+
+Nivel: Diseño Técnico Detallado
+
+Dependencias:
+
+PRD-001 al PRD-007
+1. Objetivo
+
+Definir la estructura interna exacta del sistema para permitir una implementación consistente.
+
+Este documento especifica:
+
+SQL definitivo
+Modelos Rust
+DTOs TypeScript
+Stores Zustand
+Servicios
+Repositorios
+Hooks React
+Navegación
+Auditoría
+Backups
+2. Arquitectura Física Final
+┌──────────────────────────────────┐
+│             React                │
+├──────────────────────────────────┤
+│             Zustand              │
+├──────────────────────────────────┤
+│          Tauri Commands          │
+├──────────────────────────────────┤
+│           Rust Services          │
+├──────────────────────────────────┤
+│         SQLx Repositories        │
+├──────────────────────────────────┤
+│             SQLite               │
+└──────────────────────────────────┘
+3. Estructura Definitiva del Proyecto
+Frontend
+src/
+│
+├── app/
+│
+├── components/
+│
+│   ├── buttons/
+│   ├── cards/
+│   ├── forms/
+│   ├── tables/
+│   ├── charts/
+│   ├── modals/
+│   └── layout/
+│
+├── features/
+│
+│   ├── auth/
+│   ├── dashboard/
+│   ├── patients/
+│   ├── controls/
+│   ├── treatments/
+│   ├── reports/
+│   ├── alerts/
+│   ├── users/
+│   └── backups/
+│
+├── stores/
+│
+├── hooks/
+│
+├── routes/
+│
+├── services/
+│
+├── types/
+│
+└── utils/
+Backend
+src-tauri/
+│
+├── commands/
+│
+├── services/
+│
+├── repositories/
+│
+├── database/
+│
+├── models/
+│
+├── dto/
+│
+├── audit/
+│
+├── backup/
+│
+├── security/
+│
+├── errors/
+│
+└── main.rs
+4. Migración SQL Inicial
+001_create_roles.sql
+CREATE TABLE roles(
+    id INTEGER PRIMARY KEY,
+    nombre TEXT NOT NULL UNIQUE
+);
+002_create_users.sql
+CREATE TABLE usuarios(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    usuario TEXT NOT NULL UNIQUE,
+
+    password_hash TEXT NOT NULL,
+
+    nombres TEXT NOT NULL,
+
+    apellidos TEXT NOT NULL,
+
+    rol_id INTEGER NOT NULL,
+
+    activo INTEGER DEFAULT 1,
+
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(rol_id)
+        REFERENCES roles(id)
+);
+003_create_patients.sql
+CREATE TABLE pacientes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    historia_clinica TEXT UNIQUE NOT NULL,
+
+    dni TEXT UNIQUE NOT NULL,
+
+    nombres TEXT NOT NULL,
+
+    apellido_paterno TEXT NOT NULL,
+
+    apellido_materno TEXT NOT NULL,
+
+    fecha_nacimiento DATE NOT NULL,
+
+    sexo TEXT NOT NULL,
+
+    centro_poblado_id INTEGER,
+
+    nombre_apoderado TEXT,
+
+    celular_apoderado TEXT,
+
+    activo INTEGER DEFAULT 1,
+
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+5. Modelo Rust Patient
+#[derive(Debug, Clone, Serialize, Deserialize)]
+
+pub struct Patient {
+
+    pub id: i64,
+
+    pub historia_clinica: String,
+
+    pub dni: String,
+
+    pub nombres: String,
+
+    pub apellido_paterno: String,
+
+    pub apellido_materno: String,
+
+    pub fecha_nacimiento: String,
+
+    pub sexo: String,
+
+    pub centro_poblado_id: Option<i64>,
+
+    pub activo: bool,
+}
+6. DTO Rust
+CreatePatientDTO
+pub struct CreatePatientDTO {
+
+    pub historia_clinica: String,
+
+    pub dni: String,
+
+    pub nombres: String,
+
+    pub apellido_paterno: String,
+
+    pub apellido_materno: String,
+
+    pub fecha_nacimiento: String,
+
+    pub sexo: String,
+}
+7. Response DTO
+pub struct ApiResponse<T> {
+
+    pub success: bool,
+
+    pub message: String,
+
+    pub data: Option<T>,
+}
+8. Estructura de Errores
+pub enum AppError {
+
+    Validation(String),
+
+    NotFound(String),
+
+    Unauthorized,
+
+    Database(String),
+
+    Backup(String),
+
+    Internal(String),
+}
+9. Patient Repository
+pub trait PatientRepository {
+
+    fn create();
+
+    fn update();
+
+    fn get_by_id();
+
+    fn get_by_dni();
+
+    fn search();
+
+    fn deactivate();
+}
+10. Patient Service
+
+Responsabilidades:
+
+Validaciones.
+Reglas de negocio.
+Auditoría.
+Coordinación.
+Controller
+
+↓
+
+Service
+
+↓
+
+Repository
+11. Tauri Commands
+patients.rs
+#[tauri::command]
+
+async fn create_patient(...)
+#[tauri::command]
+
+async fn update_patient(...)
+#[tauri::command]
+
+async fn search_patients(...)
+#[tauri::command]
+
+async fn get_patient(...)
+12. DTOs TypeScript
+Patient
+export interface Patient {
+
+  id: number;
+
+  historiaClinica: string;
+
+  dni: string;
+
+  nombres: string;
+
+  apellidoPaterno: string;
+
+  apellidoMaterno: string;
+
+  fechaNacimiento: string;
+
+  sexo: string;
+}
+13. Zustand
+authStore
+interface AuthState {
+
+    user: User | null;
+
+    token: string | null;
+
+    login: () => Promise<void>;
+
+    logout: () => void;
+}
+patientStore
+interface PatientState {
+
+    patients: Patient[];
+
+    selectedPatient: Patient | null;
+
+    loadPatients: () => Promise<void>;
+
+    createPatient: () => Promise<void>;
+}
+14. React Hooks
+usePatients
+Responsabilidades
+
+- cargar pacientes
+
+- filtrar
+
+- paginar
+
+- refrescar
+useControls
+Responsabilidades
+
+- cargar controles
+
+- registrar controles
+
+- actualizar controles
+15. Sistema de Rutas
+/
+
+/login
+
+/dashboard
+
+/patients
+
+/patients/new
+
+/patients/:id
+
+/controls
+
+/treatments
+
+/reports
+
+/users
+
+/settings
+16. Auditoría Técnica
+Evento
+{
+  "usuario":"admin",
+
+  "accion":"CREATE",
+
+  "tabla":"pacientes",
+
+  "registro_id":15,
+
+  "fecha":"2026-06-24"
+}
+Acciones Auditables
+CREATE
+
+UPDATE
+
+DELETE_LOGICAL
+
+LOGIN
+
+LOGOUT
+
+RESTORE_BACKUP
+17. Sistema de Logs
+application.log
+
+Eventos generales.
+
+security.log
+
+Login.
+
+Permisos.
+
+Intentos fallidos.
+
+backup.log
+
+Respaldos.
+
+error.log
+
+Errores críticos.
+
+18. Sistema de Backups
+Estructura
+backups/
+
+2026/
+
+├── 01/
+
+├── 02/
+
+├── 03/
+Nombre
+anemia_2026_06_24_2200.db
+19. Estrategia de Restauración
+Seleccionar Backup
+
+↓
+
+Validar Integridad
+
+↓
+
+Generar Snapshot
+
+↓
+
+Restaurar
+
+↓
+
+Registrar Auditoría
+20. Sistema de Configuración
+app_config.json
+{
+  "database_path": "data/anemia.db",
+
+  "backup_path": "backups",
+
+  "auto_backup": true,
+
+  "backup_hour": "22:00"
+}
+21. Seguridad
+Hash
+Argon2id
+Sesiones
+UUID v7
+Tiempo de Sesión
+8 horas
+22. Estrategia de Testing
+Backend
+Unit Tests
+services
+
+repositories
+
+validators
+Integration Tests
+sqlite
+
+audit
+
+backup
+23. Frontend Testing
+Vitest
+
+Pruebas:
+
+Componentes
+
+Stores
+
+Hooks
+24. Convenciones
+Rust
+snake_case
+TypeScript
+camelCase
+Componentes
+PascalCase
+25. Métricas Técnicas
+Métrica	Objetivo
+Login	< 500ms
+Crear Paciente	< 500ms
+Buscar Paciente	< 300ms
+Crear Control	< 500ms
+Reporte PDF	< 10s
+26. Checklist para Inicio de Desarrollo
+Infraestructura
+ Crear repositorio Git
+ Crear proyecto Tauri
+ Configurar React
+ Configurar Tailwind
+ Configurar SQLite
+ Configurar SQLx
+Backend
+ Crear migraciones
+ Crear modelos
+ Crear repositorios
+ Crear servicios
+Frontend
+ Crear layout principal
+ Crear login
+ Crear dashboard
+ Crear módulo pacientes
+Calidad
+ ESLint
+ Prettier
+ Clippy
+ Testing
+27. Entregables Resultantes
+
+Al finalizar este documento se tendrá una especificación suficiente para comenzar la implementación real del sistema.
+
+FIN DEL DOCUMENTO
+:::

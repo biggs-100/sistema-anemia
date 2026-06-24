@@ -1,0 +1,649 @@
+# PRD-002
+
+# Arquitectura Técnica del Sistema de Seguimiento de Niños Tratados por Anemia
+
+**Versión:** 1.0
+
+**Dependencia:** PRD-001
+
+**Estado:** Diseño Técnico
+
+---
+
+# 1. Objetivo del Documento
+
+Definir la arquitectura técnica, tecnologías, estructura de componentes, flujo de datos, seguridad, estrategia de almacenamiento y mecanismos de respaldo del sistema.
+
+---
+
+# 2. Principios de Diseño
+
+La arquitectura deberá cumplir los siguientes principios:
+
+* Simplicidad operacional.
+* Fácil despliegue.
+* Bajo costo de mantenimiento.
+* Alta estabilidad.
+* Seguridad de datos.
+* Escalabilidad futura.
+* Facilidad de capacitación.
+* Operación en red local.
+
+---
+
+# 3. Stack Tecnológico
+
+## Frontend
+
+### Framework
+
+React
+
+### Lenguaje
+
+TypeScript
+
+### UI
+
+React + TailwindCSS
+
+### Estado Global
+
+Zustand
+
+### Formularios
+
+React Hook Form
+
+### Validaciones
+
+Zod
+
+### Tablas
+
+TanStack Table
+
+### Gráficos
+
+Recharts
+
+---
+
+## Backend
+
+### Runtime
+
+Rust
+
+### Framework Tauri
+
+Tauri v2
+
+### Comunicación
+
+Commands Tauri
+
+---
+
+## Base de Datos
+
+SQLite
+
+### Razones
+
+* No requiere instalación.
+* No requiere servidor.
+* Fácil respaldo.
+* Excelente rendimiento local.
+* Fácil distribución.
+
+---
+
+# 4. Arquitectura General
+
+```text
+┌──────────────────────────────┐
+│          Usuario             │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│      Interfaz React          │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│      Commands Tauri          │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│      Servicios Rust          │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│         SQLite               │
+└──────────────────────────────┘
+```
+
+---
+
+# 5. Arquitectura de Carpetas
+
+## Frontend
+
+```text
+src/
+├── app/
+├── pages/
+├── features/
+├── components/
+├── hooks/
+├── services/
+├── stores/
+├── layouts/
+├── routes/
+├── types/
+├── utils/
+└── assets/
+```
+
+---
+
+## Backend
+
+```text
+src-tauri/
+├── src/
+│   ├── commands/
+│   ├── database/
+│   ├── models/
+│   ├── repositories/
+│   ├── services/
+│   ├── security/
+│   ├── backup/
+│   ├── audit/
+│   └── main.rs
+```
+
+---
+
+# 6. Estrategia de Persistencia
+
+## Archivo Principal
+
+```text
+anemia.db
+```
+
+---
+
+## Ubicación
+
+```text
+C:\SistemaAnemia\data\
+```
+
+---
+
+## Archivos Asociados
+
+```text
+C:\SistemaAnemia\
+├── app.exe
+├── data\
+│   └── anemia.db
+├── backups\
+├── logs\
+└── exports\
+```
+
+---
+
+# 7. Estrategia Multiusuario
+
+## Objetivo
+
+Permitir múltiples estaciones de trabajo.
+
+---
+
+## Diseño
+
+Una computadora actuará como servidor de archivos.
+
+```text
+PC Servidor
+│
+├── anemia.db
+├── backups
+└── logs
+
+      ▲
+      │
+      ▼
+
+PC 1
+PC 2
+PC 3
+PC 4
+```
+
+---
+
+## Mecanismo
+
+SQLite utilizará WAL Mode.
+
+```sql
+PRAGMA journal_mode=WAL;
+```
+
+Ventajas:
+
+* Lecturas concurrentes.
+* Menos bloqueos.
+* Mayor estabilidad.
+
+---
+
+# 8. Estrategia de Concurrencia
+
+## Escrituras
+
+SQLite permite una escritura a la vez.
+
+Para minimizar conflictos:
+
+* Transacciones cortas.
+* Operaciones rápidas.
+* Validaciones antes de guardar.
+
+---
+
+## Lecturas
+
+Múltiples usuarios podrán consultar simultáneamente.
+
+---
+
+# 9. Gestión de Usuarios
+
+## Autenticación
+
+Usuario + Contraseña.
+
+---
+
+## Tabla Usuarios
+
+```text
+usuarios
+```
+
+Campos:
+
+* id
+* usuario
+* password_hash
+* nombre
+* rol
+* activo
+* creado_en
+
+---
+
+# 10. Seguridad de Contraseñas
+
+Nunca almacenar contraseñas en texto plano.
+
+---
+
+## Algoritmo
+
+Argon2
+
+---
+
+## Ejemplo
+
+```text
+Contraseña:
+123456
+
+Guardado:
+$argon2id$v=19$...
+```
+
+---
+
+# 11. Roles
+
+## Administrador
+
+Acceso total.
+
+---
+
+## Supervisor
+
+Consulta completa.
+
+Generación de reportes.
+
+---
+
+## Operador
+
+Registro y edición.
+
+---
+
+## Consulta
+
+Solo lectura.
+
+---
+
+# 12. Auditoría
+
+Toda acción importante será registrada.
+
+---
+
+## Eventos
+
+* Inicio de sesión.
+* Cierre de sesión.
+* Creación.
+* Edición.
+* Eliminación lógica.
+* Restauración.
+
+---
+
+## Tabla
+
+```text
+audit_log
+```
+
+Campos:
+
+* id
+* usuario_id
+* accion
+* tabla
+* registro_id
+* fecha
+* ip_local
+
+---
+
+# 13. Estrategia de Eliminación
+
+No se eliminarán registros físicamente.
+
+---
+
+## Soft Delete
+
+```text
+activo = false
+```
+
+---
+
+Ventajas:
+
+* Recuperación rápida.
+* Historial completo.
+* Mayor seguridad.
+
+---
+
+# 14. Sistema de Backups
+
+## Objetivo
+
+Evitar pérdida de información.
+
+---
+
+## Programación
+
+Backup automático diario.
+
+Hora recomendada:
+
+```text
+22:00
+```
+
+---
+
+## Estructura
+
+```text
+backups/
+├── anemia_2026_01_01.db
+├── anemia_2026_01_02.db
+├── anemia_2026_01_03.db
+```
+
+---
+
+# 15. Política de Retención
+
+## Diarios
+
+30 días.
+
+---
+
+## Semanales
+
+12 semanas.
+
+---
+
+## Mensuales
+
+24 meses.
+
+---
+
+# 16. Restauración
+
+Proceso:
+
+1. Seleccionar respaldo.
+2. Verificar integridad.
+3. Confirmar.
+4. Restaurar.
+
+---
+
+# 17. Verificación de Integridad
+
+Antes de cada backup:
+
+```sql
+PRAGMA integrity_check;
+```
+
+---
+
+Resultado esperado:
+
+```text
+ok
+```
+
+---
+
+# 18. Exportación
+
+## Formatos
+
+PDF
+
+Excel
+
+CSV
+
+---
+
+# 19. Logs
+
+## Ubicación
+
+```text
+logs/
+```
+
+---
+
+## Archivos
+
+```text
+application.log
+security.log
+backup.log
+error.log
+```
+
+---
+
+# 20. Manejo de Errores
+
+Categorías:
+
+* Error de validación.
+* Error de base de datos.
+* Error de red.
+* Error de respaldo.
+* Error de autenticación.
+
+---
+
+# 21. Estrategia de Actualizaciones
+
+## Método
+
+Instalador incremental.
+
+---
+
+## Objetivo
+
+Actualizar aplicación sin afectar datos.
+
+---
+
+# 22. Compatibilidad
+
+Sistemas operativos:
+
+* Windows 10
+* Windows 11
+
+Arquitecturas:
+
+* x64
+
+---
+
+# 23. Métricas Técnicas
+
+## Tiempo de apertura
+
+Menor a 5 segundos.
+
+---
+
+## Búsquedas
+
+Menor a 1 segundo.
+
+---
+
+## Registro
+
+Menor a 2 segundos.
+
+---
+
+## Reportes
+
+Menor a 10 segundos.
+
+---
+
+# 24. Decisiones Arquitectónicas
+
+## ADR-001
+
+SQLite como motor principal.
+
+Motivo:
+
+Simplicidad operativa.
+
+---
+
+## ADR-002
+
+Tauri como framework de escritorio.
+
+Motivo:
+
+Bajo consumo de memoria.
+
+---
+
+## ADR-003
+
+Rust para backend.
+
+Motivo:
+
+Rendimiento y seguridad.
+
+---
+
+## ADR-004
+
+React para frontend.
+
+Motivo:
+
+Mantenibilidad y ecosistema.
+
+---
+
+# 25. Futuras Migraciones
+
+La arquitectura deberá permitir migrar posteriormente a:
+
+* PostgreSQL
+* API REST
+* Aplicación Web
+* Aplicación Móvil
+
+sin necesidad de reescribir la lógica de negocio.
+
+---
+
+# 26. Criterios de Aceptación
+
+* Multiusuario funcional.
+* Backups automáticos operativos.
+* Restauración validada.
+* Auditoría completa.
+* Seguridad basada en roles.
+* Rendimiento dentro de métricas establecidas.
+* Base de datos íntegra después de pruebas de carga.
+
+FIN DEL DOCUMENTO

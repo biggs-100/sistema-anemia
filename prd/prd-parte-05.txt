@@ -1,0 +1,806 @@
+# PRD-005
+
+# Backend, Casos de Uso Técnicos y API Interna
+
+# Sistema de Seguimiento de Niños Tratados por Anemia
+
+**Versión:** 1.0
+
+**Dependencias:** PRD-001, PRD-002, PRD-003, PRD-004
+
+**Tecnologías:**
+
+* Tauri v2
+* Rust
+* SQLite
+* SQLx
+* Serde
+* Tokio
+
+---
+
+# 1. Objetivo
+
+Definir la arquitectura interna del backend, casos de uso, servicios, repositorios, DTOs, validaciones y comandos que serán expuestos al frontend.
+
+---
+
+# 2. Arquitectura Backend
+
+Se utilizará Arquitectura Hexagonal (Ports & Adapters).
+
+```text
+┌─────────────────────┐
+│      React UI       │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│   Tauri Commands    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│     Use Cases       │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│     Services        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│   Repositories      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│      SQLite         │
+└─────────────────────┘
+```
+
+---
+
+# 3. Estructura del Proyecto Rust
+
+```text
+src-tauri/
+│
+├── src/
+│
+├── commands/
+│   ├── auth.rs
+│   ├── patients.rs
+│   ├── controls.rs
+│   ├── treatments.rs
+│   ├── reports.rs
+│   ├── backups.rs
+│   └── users.rs
+│
+├── services/
+│   ├── auth_service.rs
+│   ├── patient_service.rs
+│   ├── control_service.rs
+│   ├── treatment_service.rs
+│   ├── report_service.rs
+│   └── backup_service.rs
+│
+├── repositories/
+│   ├── patient_repository.rs
+│   ├── control_repository.rs
+│   ├── treatment_repository.rs
+│   └── user_repository.rs
+│
+├── models/
+│
+├── dto/
+│
+├── audit/
+│
+├── security/
+│
+├── database/
+│
+└── main.rs
+```
+
+---
+
+# 4. Flujo General
+
+Ejemplo:
+
+Registrar paciente.
+
+```text
+React
+
+↓
+
+Tauri Command
+
+↓
+
+PatientService
+
+↓
+
+PatientRepository
+
+↓
+
+SQLite
+```
+
+---
+
+# 5. DTOs
+
+## CreatePatientDTO
+
+```rust
+pub struct CreatePatientDTO {
+    pub historia_clinica: String,
+    pub dni: String,
+    pub nombres: String,
+    pub apellido_paterno: String,
+    pub apellido_materno: String,
+    pub fecha_nacimiento: String,
+    pub sexo: String,
+    pub centro_poblado_id: i64,
+}
+```
+
+---
+
+# 6. Entidades de Dominio
+
+## Patient
+
+Representa al paciente.
+
+Responsabilidades:
+
+* Validación básica.
+* Reglas clínicas.
+* Consistencia interna.
+
+---
+
+## Control
+
+Representa un control clínico.
+
+Responsabilidades:
+
+* Registro clínico.
+* Clasificación anemia.
+* Historial.
+
+---
+
+## Treatment
+
+Representa tratamiento activo o finalizado.
+
+---
+
+## User
+
+Representa usuario autenticado.
+
+---
+
+# 7. Casos de Uso
+
+---
+
+## UC001 Crear Paciente
+
+### Entrada
+
+CreatePatientDTO
+
+### Proceso
+
+* Validar campos.
+* Verificar DNI.
+* Verificar historia clínica.
+* Guardar registro.
+* Registrar auditoría.
+
+### Salida
+
+PatientResponseDTO
+
+---
+
+## UC002 Actualizar Paciente
+
+### Entrada
+
+UpdatePatientDTO
+
+### Proceso
+
+* Buscar paciente.
+* Validar datos.
+* Actualizar.
+* Registrar auditoría.
+
+---
+
+## UC003 Registrar Control
+
+### Entrada
+
+CreateControlDTO
+
+### Proceso
+
+* Verificar paciente.
+* Validar datos clínicos.
+* Clasificar hemoglobina.
+* Guardar.
+
+---
+
+## UC004 Registrar Tratamiento
+
+### Entrada
+
+CreateTreatmentDTO
+
+### Proceso
+
+* Validar medicamento.
+* Guardar tratamiento.
+* Crear alerta futura.
+
+---
+
+## UC005 Generar Reporte
+
+### Entrada
+
+Filtros.
+
+### Proceso
+
+* Consultar datos.
+* Construir reporte.
+* Exportar.
+
+---
+
+# 8. Reglas de Negocio
+
+## RN001
+
+No pueden existir DNIs duplicados.
+
+---
+
+## RN002
+
+No pueden existir historias clínicas duplicadas.
+
+---
+
+## RN003
+
+La hemoglobina debe estar entre:
+
+```text
+0.0 y 25.0
+```
+
+---
+
+## RN004
+
+Peso mayor que cero.
+
+---
+
+## RN005
+
+Talla mayor que cero.
+
+---
+
+## RN006
+
+No registrar controles futuros.
+
+---
+
+## RN007
+
+No finalizar tratamiento sin fecha fin.
+
+---
+
+# 9. Validaciones
+
+## Paciente
+
+### DNI
+
+```text
+Longitud = 8
+Solo números
+```
+
+---
+
+### Historia Clínica
+
+```text
+No vacía
+No duplicada
+```
+
+---
+
+## Control
+
+### Hemoglobina
+
+```text
+0.0 - 25.0
+```
+
+---
+
+### Peso
+
+```text
+> 0
+```
+
+---
+
+### Talla
+
+```text
+> 0
+```
+
+---
+
+# 10. Sistema de Clasificación
+
+## Función
+
+```text
+clasificar_anemia()
+```
+
+---
+
+## Resultado
+
+```text
+NORMAL
+LEVE
+MODERADA
+SEVERA
+```
+
+---
+
+## Tabla
+
+```text
+>= 11.0      NORMAL
+10.0-10.9    LEVE
+7.0-9.9      MODERADA
+< 7.0        SEVERA
+```
+
+---
+
+# 11. Commands de Tauri
+
+## Auth
+
+```rust
+login()
+logout()
+current_user()
+```
+
+---
+
+## Pacientes
+
+```rust
+create_patient()
+update_patient()
+delete_patient()
+get_patient()
+search_patients()
+```
+
+---
+
+## Controles
+
+```rust
+create_control()
+update_control()
+get_controls()
+```
+
+---
+
+## Tratamientos
+
+```rust
+create_treatment()
+finish_treatment()
+get_treatments()
+```
+
+---
+
+## Reportes
+
+```rust
+generate_pdf()
+generate_excel()
+```
+
+---
+
+## Backups
+
+```rust
+create_backup()
+restore_backup()
+list_backups()
+```
+
+---
+
+# 12. Repositorios
+
+## PatientRepository
+
+Métodos:
+
+```rust
+create()
+update()
+find_by_id()
+find_by_dni()
+find_by_history()
+search()
+```
+
+---
+
+## ControlRepository
+
+Métodos:
+
+```rust
+create()
+update()
+find_by_patient()
+```
+
+---
+
+## TreatmentRepository
+
+Métodos:
+
+```rust
+create()
+update()
+finish()
+find_active()
+```
+
+---
+
+# 13. Manejo de Errores
+
+## Categorías
+
+### ValidationError
+
+Datos inválidos.
+
+---
+
+### AuthenticationError
+
+Usuario o contraseña incorrectos.
+
+---
+
+### DatabaseError
+
+Error SQLite.
+
+---
+
+### AuthorizationError
+
+Sin permisos.
+
+---
+
+### BackupError
+
+Error durante respaldo.
+
+---
+
+# 14. Estructura de Error
+
+```json
+{
+  "success": false,
+  "code": "VALIDATION_ERROR",
+  "message": "DNI inválido"
+}
+```
+
+---
+
+# 15. Auditoría Automática
+
+Toda operación:
+
+```text
+INSERT
+UPDATE
+DELETE LOGICO
+RESTORE
+```
+
+Debe generar evento.
+
+---
+
+## Información Registrada
+
+* Usuario.
+* Fecha.
+* Acción.
+* Tabla.
+* Registro.
+
+---
+
+# 16. Sistema de Alertas
+
+## Generación Automática
+
+---
+
+### Control Vencido
+
+Más de 30 días.
+
+---
+
+### Hemoglobina Crítica
+
+Menor a 7.
+
+---
+
+### Tratamiento Vencido
+
+Fecha final superada.
+
+---
+
+# 17. Seguridad
+
+## Contraseñas
+
+Argon2.
+
+---
+
+## Sesiones
+
+Token interno.
+
+---
+
+## Permisos
+
+Verificados por rol.
+
+---
+
+# 18. Logging
+
+## application.log
+
+Eventos generales.
+
+---
+
+## security.log
+
+Accesos.
+
+---
+
+## backup.log
+
+Respaldos.
+
+---
+
+## error.log
+
+Errores.
+
+---
+
+# 19. Transacciones
+
+Operaciones críticas deberán utilizar:
+
+```rust
+BEGIN TRANSACTION
+COMMIT
+ROLLBACK
+```
+
+---
+
+# 20. Sistema de Backups
+
+## Flujo
+
+```text
+Cerrar transacción
+
+↓
+
+Verificar integridad
+
+↓
+
+Copiar SQLite
+
+↓
+
+Registrar backup
+
+↓
+
+Finalizar
+```
+
+---
+
+# 21. Recuperación
+
+Proceso:
+
+```text
+Seleccionar backup
+
+↓
+
+Verificar hash
+
+↓
+
+Restaurar
+
+↓
+
+Registrar auditoría
+```
+
+---
+
+# 22. Pruebas Unitarias
+
+Cobertura mínima:
+
+```text
+80%
+```
+
+---
+
+## Casos
+
+* Crear paciente.
+* Crear control.
+* Crear tratamiento.
+* Login.
+* Backup.
+
+---
+
+# 23. Pruebas de Integración
+
+Verificar:
+
+* SQLite.
+* Repositorios.
+* Servicios.
+* Auditoría.
+
+---
+
+# 24. Rendimiento
+
+Objetivos:
+
+### Crear paciente
+
+< 500 ms
+
+---
+
+### Buscar paciente
+
+< 300 ms
+
+---
+
+### Crear control
+
+< 500 ms
+
+---
+
+### Generar reporte
+
+< 10 segundos
+
+---
+
+# 25. Preparación para Futuras Migraciones
+
+Todo acceso a datos deberá pasar por repositorios.
+
+Prohibido:
+
+```rust
+SELECT
+```
+
+directamente desde UI.
+
+---
+
+Objetivo:
+
+Permitir migración futura a:
+
+* PostgreSQL
+* API REST
+* Aplicación Web
+
+sin modificar reglas de negocio.
+
+---
+
+# 26. Criterios de Aceptación
+
+* Arquitectura Hexagonal implementada.
+* Commands funcionando.
+* Auditoría automática.
+* Sistema de alertas.
+* Validaciones completas.
+* Cobertura mínima de pruebas.
+* Sistema preparado para futuras migraciones.
+
+FIN DEL DOCUMENTO
