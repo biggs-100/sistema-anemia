@@ -9,3 +9,4 @@ pub mod medicamentos;
 pub mod reports;
 pub mod backups;
 pub mod users;
+pub mod visitas;

@@ -3,7 +3,7 @@ use regex::Regex;
 use std::collections::HashMap;
 
 use crate::audit::AuditService;
-use crate::dto::{ApiResponse, CreatePatientDTO, PatientResponse, SearchResult, UpdatePatientDTO};
+use crate::dto::{ApiResponse, CreatePatientDTO, ImportResult, PatientResponse, SearchResult, UpdatePatientDTO};
 use crate::errors::AppError;
 use crate::models::Patient;
 use crate::repositories::centro_poblado_repository::CentroPobladoRepository;
@@ -166,6 +166,42 @@ impl PatientService {
             page,
             page_size,
         }))
+    }
+
+    /// Imports a batch of patients from CSV-parsed data.
+    /// Each patient is validated individually; errors are collected per-row.
+    pub async fn import_batch(
+        &self,
+        patients: Vec<CreatePatientDTO>,
+        usuario_id: Option<i64>,
+    ) -> ImportResult {
+        let mut imported: i64 = 0;
+        let mut errors: i64 = 0;
+        let mut details = vec![];
+
+        for (i, dto) in patients.into_iter().enumerate() {
+            match self.create(dto, usuario_id).await {
+                Ok(_) => imported += 1,
+                Err(e) => {
+                    errors += 1;
+                    // Use log_detail() to get the actual validation error detail,
+                    // fallback to user_message() if detail is empty.
+                    let msg = e.log_detail();
+                    let detail = if msg.is_empty() {
+                        e.to_string()
+                    } else {
+                        msg.to_string()
+                    };
+                    details.push(format!("Fila {}: {}", i + 1, detail));
+                }
+            }
+        }
+
+        ImportResult {
+            imported,
+            errors,
+            details,
+        }
     }
 
     /// Deactivates a patient (soft delete).

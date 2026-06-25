@@ -43,9 +43,9 @@ function CustomTooltip({
   const entry = payload[0];
   const label = LABELS[entry.payload.clasificacion] ?? entry.payload.clasificacion;
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
-      <p className="text-sm font-semibold text-neutral-900">{label}</p>
-      <p className="text-sm text-neutral-600">{entry.value} pacientes</p>
+    <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+      <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{label}</p>
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">{entry.value} pacientes</p>
     </div>
   );
 }
@@ -58,8 +58,8 @@ export default function DistributionChart({ data }: DistributionChartProps) {
 
   if (chartData.length === 0) {
     return (
-      <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-neutral-200 bg-neutral-50">
-        <p className="text-sm text-neutral-400">
+      <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800/50">
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">
           No hay datos de distribución disponibles
         </p>
       </div>
@@ -67,8 +67,8 @@ export default function DistributionChart({ data }: DistributionChartProps) {
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-      <h4 className="mb-4 text-sm font-semibold text-neutral-700">
+    <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+      <h4 className="mb-4 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
         Distribución por Clasificación
       </h4>
       <ResponsiveContainer width="100%" height={300}>

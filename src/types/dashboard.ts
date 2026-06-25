@@ -7,6 +7,15 @@ export interface DashboardStats {
   distribucionHb: HbDistribucion[];
   evolucionMensual: EvolucionMensual[];
   alertasRecientes: AlertaResumen[];
+  // Advanced stats (Batch 2)
+  tasaRecuperacion: number;
+  tratamientoMasEfectivo: TratamientoEfectivo | null;
+}
+
+export interface TratamientoEfectivo {
+  nombre: string;
+  total: number;
+  tasaExito: number;
 }
 
 export interface HbDistribucion {

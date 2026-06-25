@@ -1,3 +1,4 @@
+pub mod alerta_generator;
 pub mod auth_service;
 pub mod centro_poblado_service;
 pub mod control_service;

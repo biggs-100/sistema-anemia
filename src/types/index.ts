@@ -29,6 +29,7 @@ export type {
   HbDistribucion,
   EvolucionMensual,
   AlertaResumen,
+  TratamientoEfectivo,
 } from "./dashboard";
 
 export type {
@@ -46,3 +47,9 @@ export type {
 export type {
   Backup,
 } from "./backup";
+
+export type {
+  Visita,
+  CreateVisitaDTO,
+  ResultadoVisita,
+} from "./visita";

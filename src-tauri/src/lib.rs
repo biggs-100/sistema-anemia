@@ -9,6 +9,8 @@ mod backup;
 mod security;
 mod errors;
 
+use services::alerta_generator;
+
 use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::Manager;
@@ -64,6 +66,9 @@ pub fn run() {
 
             // --- Admin seed: create default admin if DB is empty ---
             rt.block_on(seed_admin(&pool))?;
+
+            // --- Run alert generators on startup ---
+            rt.block_on(alerta_generator::run_all(&pool));
 
             // --- Resolve data directories ---
             let data_dir = resolve_data_dir();
@@ -145,6 +150,17 @@ pub fn run() {
                 }
             });
 
+            // --- Hourly alert generator ---
+            let alert_pool = pool.clone();
+            tokio::spawn(async move {
+                let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600));
+                loop {
+                    interval.tick().await;
+                    tracing::info!("Running scheduled alert generation...");
+                    alerta_generator::run_all(&alert_pool).await;
+                }
+            });
+
             // AuthService with Arc for shared ownership across commands + scavenger
             let auth_service = Arc::new(AuthService::new(
                 Arc::new(SqliteUserRepository::new(pool.clone())),
@@ -183,6 +199,7 @@ pub fn run() {
             commands::patients::get_patient,
             commands::patients::search_patients,
             commands::patients::deactivate_patient,
+            commands::patients::import_patients_csv,
             commands::controls::create_control,
             commands::controls::update_control,
             commands::controls::get_controls,
@@ -204,6 +221,11 @@ pub fn run() {
             commands::users::update_user,
             commands::users::deactivate_user,
             commands::centros_poblados::list_centros_poblados,
+            commands::centros_poblados::create_centro_poblado,
+            commands::centros_poblados::update_centro_poblado,
+            commands::centros_poblados::delete_centro_poblado,
+            commands::visitas::create_visita,
+            commands::visitas::get_visitas,
             commands::dashboard::get_dashboard_stats,
         ])
         .run(tauri::generate_context!())

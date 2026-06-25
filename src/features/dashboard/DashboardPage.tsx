@@ -3,11 +3,61 @@ import KpiGrid from "./components/KpiGrid";
 import DistributionChart from "./components/DistributionChart";
 import MonthlyEvolutionChart from "./components/MonthlyEvolutionChart";
 import RecentAlertsList from "./components/RecentAlertsList";
+import type { TratamientoEfectivo } from "@/types/dashboard";
+
+// ---------------------------------------------------------------------------
+// Advanced Stats Card
+// ---------------------------------------------------------------------------
+function RecoveryRateCard({ rate }: { rate: number }) {
+  const color =
+    rate >= 60 ? "text-green-600 dark:text-green-400" :
+    rate >= 40 ? "text-amber-500 dark:text-amber-400" :
+    "text-red-600 dark:text-red-400";
+
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800">
+      <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+        Tasa de Recuperación (6m)
+      </p>
+      <p className={`mt-1 text-3xl font-bold ${color}`}>
+        {rate.toFixed(1)}%
+      </p>
+      <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+        Pacientes que normalizaron Hb en los últimos 6 meses
+      </p>
+    </div>
+  );
+}
+
+function BestTreatmentCard({ treatment }: { treatment: TratamientoEfectivo | null }) {
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800">
+      <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+        Tratamiento Más Efectivo
+      </p>
+      {treatment ? (
+        <>
+          <p className="mt-1 text-xl font-bold text-blue-600 dark:text-blue-400">
+            {treatment.nombre}
+          </p>
+          <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            {treatment.tasaExito.toFixed(1)}% de éxito · {treatment.total}{" "}
+            paciente{treatment.total !== 1 ? "s" : ""}
+          </p>
+        </>
+      ) : (
+        <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-500">
+          Sin datos suficientes
+        </p>
+      )}
+    </div>
+  );
+}
 
 function SkeletonBlock({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-neutral-200 ${className ?? "h-24"}`}
+      className={`animate-pulse rounded-lg bg-neutral-200 dark:bg-neutral-700 ${className ?? "h-24"}`}
     />
   );
 }
@@ -70,8 +120,8 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-neutral-900">Dashboard</h2>
-          <p className="mt-1 text-sm text-neutral-500">
+          <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Dashboard</h2>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Resumen del sistema de seguimiento
           </p>
         </div>
@@ -86,14 +136,20 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-neutral-900">Dashboard</h2>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">Dashboard</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Resumen del sistema de seguimiento
         </p>
       </div>
 
       {/* KPI Cards */}
       <KpiGrid stats={stats} />
+
+      {/* Advanced Stats (Batch 2) */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <RecoveryRateCard rate={stats.tasaRecuperacion} />
+        <BestTreatmentCard treatment={stats.tratamientoMasEfectivo} />
+      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

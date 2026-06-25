@@ -66,6 +66,18 @@ export const API_COMMANDS = {
   LIST_ALERTAS: "list_alertas",
   RESOLVER_ALERTA: "resolver_alerta",
   RESOLVER_TODAS_ALERTAS: "resolver_todas_alertas",
+
+  // Centros Poblados
+  CREATE_CENTRO_POBLADO: "create_centro_poblado",
+  UPDATE_CENTRO_POBLADO: "update_centro_poblado",
+  DELETE_CENTRO_POBLADO: "delete_centro_poblado",
+
+  // Visitas
+  CREATE_VISITA: "create_visita",
+  GET_VISITAS: "get_visitas",
+
+  // Import
+  IMPORT_PATIENTS_CSV: "import_patients_csv",
 } as const;
 
 export const ANEMIA_THRESHOLDS = {

@@ -117,6 +117,25 @@ pub struct PatientResponse {
     pub activo: bool,
 }
 
+/// DTO for creating a centro poblado.
+/// Result of CSV patient import.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportResult {
+    pub imported: i64,
+    pub errors: i64,
+    pub details: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCentroPobladoDTO {
+    pub nombre: String,
+    pub distrito: String,
+    pub provincia: String,
+    pub departamento: String,
+}
+
 /// Public-facing centro poblado data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -205,6 +224,30 @@ pub struct AlertaResponse {
     pub descripcion: Option<String>,
     pub fecha: Option<String>,
     pub resuelta: bool,
+}
+
+/// Public-facing visita domiciliaria response.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VisitaResponse {
+    pub id: i64,
+    pub paciente_id: i64,
+    pub paciente_nombre: Option<String>,
+    pub fecha_visita: String,
+    pub responsable: Option<String>,
+    pub resultado: Option<String>,
+    pub observaciones: Option<String>,
+}
+
+/// DTO for creating a visita domiciliaria.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateVisitaDTO {
+    pub paciente_id: i64,
+    pub fecha_visita: String,
+    pub responsable: Option<String>,
+    pub resultado: Option<String>,
+    pub observaciones: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

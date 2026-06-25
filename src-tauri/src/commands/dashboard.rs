@@ -22,6 +22,17 @@ pub struct DashboardStats {
     pub distribucion_hb: Vec<HbDistribucion>,
     pub evolucion_mensual: Vec<EvolucionMensual>,
     pub alertas_recientes: Vec<AlertaResumen>,
+    // Advanced stats (Batch 2)
+    pub tasa_recuperacion: f64,
+    pub tratamiento_mas_efectivo: Option<TratamientoEfectivo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TratamientoEfectivo {
+    pub nombre: String,
+    pub total: i64,
+    pub tasa_exito: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -126,6 +137,41 @@ pub async fn get_dashboard_stats(
     let casos_severos = casos_severos.map_err(|e| e.to_string())?;
 
     // Run the three remaining queries in parallel
+    // Advanced stats
+    let tasa_recuperacion: f64 = sqlx::query_scalar(
+        "SELECT ROUND(
+            CAST(COUNT(DISTINCT CASE WHEN c.hemoglobina >= 11.0 THEN c.paciente_id END) AS REAL) * 100.0 /
+            NULLIF(COUNT(DISTINCT c.paciente_id), 0), 1
+         )
+         FROM controles c
+         WHERE c.fecha_control >= date('now', '-6 months')"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    #[derive(sqlx::FromRow)]
+    struct TratamientoRow {
+        nombre: String,
+        total: i64,
+        tasa_exito: f64,
+    }
+
+    let tratamiento_row: Option<TratamientoRow> = sqlx::query_as::<_, TratamientoRow>(
+        "SELECT m.nombre, COUNT(*) as total,
+            ROUND(AVG(CASE WHEN c.hemoglobina >= 11.0 THEN 1.0 ELSE 0.0 END) * 100.0, 1) as tasa_exito
+         FROM tratamientos t
+         JOIN medicamentos m ON m.id = t.medicamento_id
+         JOIN controles c ON c.paciente_id = t.paciente_id AND c.fecha_control > t.fecha_inicio
+         WHERE t.estado = 'activo'
+         GROUP BY m.id
+         ORDER BY tasa_exito DESC
+         LIMIT 1"
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
     let (distribucion_hb, evolucion_mensual, alertas_recientes) = tokio::join!(
         sqlx::query_as::<_, HbDistribucionRow>(
             "SELECT \
@@ -173,6 +219,12 @@ pub async fn get_dashboard_stats(
         tratamientos_activos,
         alertas_pendientes,
         casos_severos,
+        tasa_recuperacion,
+        tratamiento_mas_efectivo: tratamiento_row.map(|r| TratamientoEfectivo {
+            nombre: r.nombre,
+            total: r.total,
+            tasa_exito: r.tasa_exito,
+        }),
         distribucion_hb: distribucion_hb
             .into_iter()
             .map(|r| HbDistribucion {

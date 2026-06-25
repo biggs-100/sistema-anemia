@@ -34,14 +34,14 @@ function CustomTooltip({
   if (!active || !payload || payload.length === 0) return null;
   const entry = payload[0].payload;
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
-      <p className="text-xs font-medium text-neutral-500">
+    <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+      <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
         {formatMonth(entry.mes)}
       </p>
-      <p className="mt-1 text-sm font-semibold text-neutral-900">
+      <p className="mt-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
         Hb Promedio: {entry.promedioHb.toFixed(1)} g/dL
       </p>
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-neutral-500 dark:text-neutral-400">
         {entry.totalControles} control(es)
       </p>
     </div>
@@ -53,8 +53,8 @@ export default function MonthlyEvolutionChart({
 }: MonthlyEvolutionChartProps) {
   if (data.length === 0) {
     return (
-      <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-neutral-200 bg-neutral-50">
-        <p className="text-sm text-neutral-400">
+      <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800/50">
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">
           No hay datos de evolución mensual
         </p>
       </div>
@@ -67,8 +67,8 @@ export default function MonthlyEvolutionChart({
   }));
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-      <h4 className="mb-4 text-sm font-semibold text-neutral-700">
+    <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+      <h4 className="mb-4 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
         Evolución Mensual de Hemoglobina
       </h4>
       <ResponsiveContainer width="100%" height={300}>

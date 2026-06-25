@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use sqlx::SqlitePool;
 
+use crate::dto::CreateCentroPobladoDTO;
 use crate::errors::AppError;
 use crate::models::CentroPoblado;
 
@@ -8,6 +9,9 @@ use crate::models::CentroPoblado;
 #[async_trait]
 pub trait CentroPobladoRepository: Send + Sync {
     async fn list_all(&self) -> Result<Vec<CentroPoblado>, AppError>;
+    async fn create(&self, dto: &CreateCentroPobladoDTO) -> Result<CentroPoblado, AppError>;
+    async fn update(&self, id: i64, dto: &CreateCentroPobladoDTO) -> Result<CentroPoblado, AppError>;
+    async fn delete(&self, id: i64) -> Result<(), AppError>;
 }
 
 /// SQLite-backed centro poblado repository using sqlx.
@@ -32,6 +36,79 @@ impl CentroPobladoRepository for SqliteCentroPobladoRepository {
         .await
         .map_err(|e| db_error("list centros poblados", e))
         .map(|rows| rows.into_iter().map(CentroPobladoRow::into_model).collect())
+    }
+
+    async fn create(&self, dto: &CreateCentroPobladoDTO) -> Result<CentroPoblado, AppError> {
+        let id: i64 = sqlx::query_scalar(
+            "INSERT INTO centros_poblados (nombre, distrito, provincia, departamento) \
+             VALUES (?1, ?2, ?3, ?4) RETURNING id",
+        )
+        .bind(&dto.nombre)
+        .bind(&dto.distrito)
+        .bind(&dto.provincia)
+        .bind(&dto.departamento)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| db_error("create centro poblado", e))?;
+
+        Ok(CentroPoblado {
+            id,
+            nombre: dto.nombre.clone(),
+            distrito: Some(dto.distrito.clone()),
+            provincia: Some(dto.provincia.clone()),
+            departamento: Some(dto.departamento.clone()),
+            activo: true,
+        })
+    }
+
+    async fn update(&self, id: i64, dto: &CreateCentroPobladoDTO) -> Result<CentroPoblado, AppError> {
+        let affected = sqlx::query(
+            "UPDATE centros_poblados SET nombre = ?1, distrito = ?2, provincia = ?3, departamento = ?4 \
+             WHERE id = ?5 AND activo = 1",
+        )
+        .bind(&dto.nombre)
+        .bind(&dto.distrito)
+        .bind(&dto.provincia)
+        .bind(&dto.departamento)
+        .bind(id)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| db_error("update centro poblado", e))?
+        .rows_affected();
+
+        if affected == 0 {
+            return Err(AppError::NotFound(format!(
+                "Centro poblado {id} no encontrado"
+            )));
+        }
+
+        Ok(CentroPoblado {
+            id,
+            nombre: dto.nombre.clone(),
+            distrito: Some(dto.distrito.clone()),
+            provincia: Some(dto.provincia.clone()),
+            departamento: Some(dto.departamento.clone()),
+            activo: true,
+        })
+    }
+
+    async fn delete(&self, id: i64) -> Result<(), AppError> {
+        let affected = sqlx::query(
+            "UPDATE centros_poblados SET activo = 0 WHERE id = ?1 AND activo = 1",
+        )
+        .bind(id)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| db_error("delete centro poblado", e))?
+        .rows_affected();
+
+        if affected == 0 {
+            return Err(AppError::NotFound(format!(
+                "Centro poblado {id} no encontrado"
+            )));
+        }
+
+        Ok(())
     }
 }
 

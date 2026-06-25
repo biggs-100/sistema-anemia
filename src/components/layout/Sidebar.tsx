@@ -35,18 +35,20 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`flex flex-col border-r border-neutral-200 bg-white transition-all duration-200 ${
+      className={`flex flex-col border-r border-neutral-200 bg-white transition-all duration-200 dark:border-neutral-700 dark:bg-neutral-900 ${
         collapsed ? "w-16" : "w-64"
       }`}
     >
       {/* Logo / Toggle */}
-      <div className="flex h-16 items-center justify-between border-b border-neutral-200 px-4">
+      <div className="flex h-16 items-center justify-between border-b border-neutral-200 px-4 dark:border-neutral-700">
         {!collapsed && (
-          <span className="text-sm font-bold text-blue-600">Sistema Anemia</span>
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+            Sistema Anemia
+          </span>
         )}
         <button
           onClick={onToggle}
-          className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"
+          className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
           aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
         >
           {collapsed ? "→" : "←"}
@@ -63,8 +65,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
               }`
             }
           >

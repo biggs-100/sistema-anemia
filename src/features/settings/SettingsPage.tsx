@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useBackupStore } from "@/stores/backupStore";
 import { useAuthStore } from "@/stores/authStore";
-import type { Backup } from "@/types";
+import { API_COMMANDS } from "@/utils/constants";
+import type { Backup, CentroPoblado } from "@/types";
+import type { ApiResponse } from "@/types/api";
 import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
 
@@ -39,6 +42,104 @@ export default function SettingsPage() {
   const isAdmin = user?.rolId === 1;
   const [restoreId, setRestoreId] = useState<number | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Centros Poblados state
+  const [centrosPoblados, setCentrosPoblados] = useState<CentroPoblado[]>([]);
+  const [loadingCentros, setLoadingCentros] = useState(false);
+  const [centroModalOpen, setCentroModalOpen] = useState(false);
+  const [editingCentro, setEditingCentro] = useState<CentroPoblado | null>(null);
+  const [centroForm, setCentroForm] = useState({ nombre: "", distrito: "", provincia: "", departamento: "" });
+  const [centroError, setCentroError] = useState<string | null>(null);
+  const [savingCentro, setSavingCentro] = useState(false);
+
+  const loadCentrosPoblados = useCallback(async () => {
+    const token = useAuthStore.getState().token;
+    if (!token) return;
+    setLoadingCentros(true);
+    try {
+      const res = await invoke<ApiResponse<CentroPoblado[]>>(API_COMMANDS.LIST_CENTROS_POBLADOS, { token });
+      if (res.success && res.data) {
+        setCentrosPoblados(res.data);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingCentros(false);
+    }
+  }, []);
+
+  const openCentroModal = (centro?: CentroPoblado) => {
+    if (centro) {
+      setEditingCentro(centro);
+      setCentroForm({ nombre: centro.nombre, distrito: centro.distrito, provincia: centro.provincia, departamento: centro.departamento });
+    } else {
+      setEditingCentro(null);
+      setCentroForm({ nombre: "", distrito: "", provincia: "", departamento: "" });
+    }
+    setCentroError(null);
+    setCentroModalOpen(true);
+  };
+
+  const handleSaveCentro = async () => {
+    const token = useAuthStore.getState().token;
+    if (!token) return;
+
+    if (!centroForm.nombre.trim()) {
+      setCentroError("El nombre es requerido");
+      return;
+    }
+    if (!centroForm.distrito.trim()) {
+      setCentroError("El distrito es requerido");
+      return;
+    }
+
+    setSavingCentro(true);
+    setCentroError(null);
+    try {
+      if (editingCentro) {
+        const res = await invoke<ApiResponse<CentroPoblado>>(API_COMMANDS.UPDATE_CENTRO_POBLADO, {
+          token,
+          id: editingCentro.id,
+          ...centroForm,
+        });
+        if (!res.success) throw new Error(res.message);
+      } else {
+        const res = await invoke<ApiResponse<CentroPoblado>>(API_COMMANDS.CREATE_CENTRO_POBLADO, {
+          token,
+          ...centroForm,
+        });
+        if (!res.success) throw new Error(res.message);
+      }
+      setCentroModalOpen(false);
+      loadCentrosPoblados();
+    } catch (err) {
+      setCentroError(err instanceof Error ? err.message : "Error al guardar");
+    } finally {
+      setSavingCentro(false);
+    }
+  };
+
+  const handleDeleteCentro = async (id: number) => {
+    if (!window.confirm("¿Está seguro de eliminar este centro poblado?")) return;
+    const token = useAuthStore.getState().token;
+    if (!token) return;
+
+    try {
+      const res = await invoke<ApiResponse<null>>(API_COMMANDS.DELETE_CENTRO_POBLADO, { token, id });
+      if (!res.success) throw new Error(res.message);
+      loadCentrosPoblados();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al eliminar");
+    }
+  };
+
+  // Load centros on mount
+  useEffect(() => {
+    if (isAdmin) {
+      loadCentrosPoblados();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -194,6 +295,73 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Centros Poblados Section */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-900">Centros Poblados</h3>
+            <p className="mt-1 text-sm text-neutral-500">
+              Gestión de centros poblados para el registro de pacientes
+            </p>
+          </div>
+          <button
+            onClick={() => openCentroModal()}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            + Nuevo
+          </button>
+        </div>
+
+        <div className="mt-4">
+          {loadingCentros ? (
+            <div className="flex items-center justify-center py-8 text-neutral-400">
+              <Spinner size="sm" className="mr-2" />
+              <span className="text-sm">Cargando centros poblados...</span>
+            </div>
+          ) : centrosPoblados.length === 0 ? (
+            <p className="text-sm text-neutral-400">No hay centros poblados registrados</p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-neutral-200">
+              <table className="min-w-full divide-y divide-neutral-200">
+                <thead className="bg-neutral-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">Nombre</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">Distrito</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">Provincia</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">Departamento</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
+                  {centrosPoblados.map((cp) => (
+                    <tr key={cp.id} className="hover:bg-neutral-50">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-neutral-900">{cp.nombre}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">{cp.distrito}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">{cp.provincia}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">{cp.departamento}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">
+                        <button
+                          onClick={() => openCentroModal(cp)}
+                          className="mr-2 rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCentro(cp.id)}
+                          className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* System Info */}
       <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
         <h3 className="text-lg font-semibold text-neutral-900">Información del Sistema</h3>
@@ -233,6 +401,89 @@ export default function SettingsPage() {
           >
             {restoring ? "Restaurando..." : "Restaurar"}
           </button>
+        </div>
+      </Modal>
+
+      {/* Centro Poblado Form Modal */}
+      <Modal
+        isOpen={centroModalOpen}
+        onClose={() => setCentroModalOpen(false)}
+        title={editingCentro ? "Editar Centro Poblado" : "Nuevo Centro Poblado"}
+      >
+        {centroError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="text-sm text-red-700">{centroError}</p>
+          </div>
+        )}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700">
+              Nombre <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={centroForm.nombre}
+              onChange={(e) => setCentroForm({ ...centroForm, nombre: e.target.value })}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nombre del centro poblado"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700">
+              Distrito <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={centroForm.distrito}
+              onChange={(e) => setCentroForm({ ...centroForm, distrito: e.target.value })}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Distrito"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700">Provincia</label>
+            <input
+              type="text"
+              value={centroForm.provincia}
+              onChange={(e) => setCentroForm({ ...centroForm, provincia: e.target.value })}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Provincia"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700">Departamento</label>
+            <input
+              type="text"
+              value={centroForm.departamento}
+              onChange={(e) => setCentroForm({ ...centroForm, departamento: e.target.value })}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Departamento"
+            />
+          </div>
+          <div className="flex justify-end gap-3 border-t border-neutral-200 pt-4">
+            <button
+              type="button"
+              onClick={() => setCentroModalOpen(false)}
+              disabled={savingCentro}
+              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSaveCentro}
+              disabled={savingCentro}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {savingCentro ? (
+                <span className="flex items-center gap-1">
+                  <Spinner size="sm" />
+                  Guardando...
+                </span>
+              ) : (
+                editingCentro ? "Actualizar" : "Crear"
+              )}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
